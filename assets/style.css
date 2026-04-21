@@ -1,66 +1,78 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { font-size: 16px; }
+
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #09090b;
-  color: #fafafa;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F5F5F7;
+  color: #1C1C1E;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
-/* ── scrollbar ─────────────────────────────────────── */
+/* ── scrollbar ─────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #18181b; }
-::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C7C7CC; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #8E8E93; }
 
-/* ── range slider ──────────────────────────────────── */
-.rc-slider-track       { background-color: #3b82f6 !important; height: 3px !important; }
-.rc-slider-rail        { background-color: #3f3f46 !important; height: 3px !important; }
-.rc-slider-handle      {
-  border-color: #3b82f6 !important;
-  background: #3b82f6 !important;
-  width: 14px !important;
-  height: 14px !important;
-  margin-top: -6px !important;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.25) !important;
+/* ── range slider ──────────────────────── */
+.rc-slider-track  { background: #007AFF !important; height: 3px !important; }
+.rc-slider-rail   { background: #E5E5EA !important; height: 3px !important; }
+.rc-slider-handle {
+  border-color: #007AFF !important;
+  background: #fff !important;
+  width: 16px !important; height: 16px !important; margin-top: -7px !important;
+  box-shadow: 0 0 0 2px rgba(0,122,255,0.2) !important;
 }
-.rc-slider-handle:hover,
-.rc-slider-handle:focus {
-  border-color: #60a5fa !important;
-  box-shadow: 0 0 0 4px rgba(59,130,246,0.35) !important;
-}
+.rc-slider-handle:hover  { box-shadow: 0 0 0 4px rgba(0,122,255,0.25) !important; }
+.rc-slider-handle:focus  { box-shadow: 0 0 0 4px rgba(0,122,255,0.35) !important; outline: none !important; }
+.rc-slider-mark-text     { color: #8E8E93 !important; font-size: 10px !important; font-family: Inter, sans-serif; }
 
-/* ── tabs ──────────────────────────────────────────── */
-.dash-tabs { border-bottom: none !important; }
-.dash-tab  { transition: color 0.15s, border-color 0.15s !important; }
-.dash-tab:hover { color: #fafafa !important; }
+/* ── tabs ─ strip out Dash default chrome ── */
+.dash-tabs,
+.dash-tabs-content { border: none !important; background: transparent !important; }
 
-/* ── dropdown ──────────────────────────────────────── */
+/* ── dropdown ──────────────────────────── */
 .Select-control {
-  background-color: #27272a !important;
-  border-color: #3f3f46 !important;
-  color: #fafafa !important;
-  border-radius: 6px !important;
+  background: #fff !important;
+  border: 1.5px solid #E5E5EA !important;
+  border-radius: 8px !important;
+  color: #1C1C1E !important;
   min-height: 34px !important;
+  font-size: 13px !important;
+  font-family: Inter, sans-serif !important;
+  transition: border-color 0.15s !important;
+  box-shadow: none !important;
 }
-.Select-control:hover   { border-color: #52525b !important; }
-.Select-menu-outer      { background-color: #27272a !important; border-color: #3f3f46 !important; border-radius: 6px !important; }
-.Select-option          { color: #fafafa !important; font-size: 13px; padding: 8px 12px; }
-.Select-option:hover    { background-color: #3f3f46 !important; }
-.Select-option.is-focused { background-color: #3f3f46 !important; }
-.Select-value-label     { color: #fafafa !important; font-size: 13px !important; }
-.Select-arrow           { border-top-color: #a1a1aa !important; }
-.Select-placeholder     { color: #71717a !important; font-size: 13px; }
+.Select-control:hover         { border-color: #C7C7CC !important; }
+.is-open > .Select-control    { border-color: #007AFF !important; box-shadow: 0 0 0 3px rgba(0,122,255,0.15) !important; }
+.Select-menu-outer {
+  background: #fff !important;
+  border: 1.5px solid #E5E5EA !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+}
+.Select-option                { color: #1C1C1E !important; font-size: 13px; padding: 9px 14px; }
+.Select-option:hover,
+.Select-option.is-focused     { background: #F5F5F7 !important; }
+.Select-option.is-selected    { background: #EBF3FF !important; color: #007AFF !important; font-weight: 500; }
+.Select-value-label           { color: #1C1C1E !important; font-size: 13px !important; }
+.Select-placeholder           { color: #8E8E93 !important; font-size: 13px; }
+.Select-arrow                 { border-top-color: #8E8E93 !important; }
 
-/* ── radio items ───────────────────────────────────── */
-input[type="radio"] { accent-color: #3b82f6; }
+/* ── radio items ───────────────────────── */
+input[type="radio"] { accent-color: #007AFF; cursor: pointer; }
 
-/* ── plotly tooltip ────────────────────────────────── */
+/* ── Plotly modebar ─────────────────────── */
 .modebar { display: none !important; }
 
-/* ── responsive ────────────────────────────────────── */
-@media (max-width: 1024px) {
-  div[style*="display: flex"] { flex-wrap: wrap !important; }
+/* ── responsive ────────────────────────── */
+@media (max-width: 1100px) {
+  .ev-row { flex-direction: column !important; }
 }
