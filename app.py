@@ -1,86 +1,103 @@
 """
 EV Energy Sector Dashboard
-Real data: Washington State EV Population (data.wa.gov) — 280,000+ registrations
-Global context data calibrated to IEA Global EV Outlook 2015-2024
+Real data: Washington State EV Population (data.wa.gov) — 280 k+ registrations
+Global context: IEA Global EV Outlook 2015-2024
 """
 
 import os
 import dash
 from dash import dcc, html, Input, Output
-import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
 # ══════════════════════════════════════════════════════════════════════════════
-# THEME
+# DESIGN SYSTEM
 # ══════════════════════════════════════════════════════════════════════════════
 
-BG     = '#0d1117'
-CARD   = '#161b22'
-CARD2  = '#1c2333'
-BORDER = '#30363d'
-TEXT   = '#e6edf3'
-MUTED  = '#8b949e'
+BG     = '#09090b'   # zinc-950
+CARD   = '#18181b'   # zinc-900
+CARD2  = '#27272a'   # zinc-800
+BORDER = '#3f3f46'   # zinc-700
+TEXT   = '#fafafa'   # zinc-50
+MUTED  = '#a1a1aa'   # zinc-400
+FAINT  = '#52525b'   # zinc-600
 
-GREEN  = '#3fb950';  BLUE   = '#58a6ff';  AMBER  = '#d29922'
-PURPLE = '#bc8cff';  TEAL   = '#39d353';  RED    = '#f85149'
-ORANGE = '#ffa657';  CYAN   = '#79c0ff';  LIME   = '#7ee787'
-ROSE   = '#ff7b72';  INDIGO = '#a5d6ff'
+BLUE   = '#3b82f6'
+TEAL   = '#14b8a6'
+AMBER  = '#f59e0b'
+GREEN  = '#22c55e'
+RED    = '#ef4444'
+PURPLE = '#a855f7'
+ORANGE = '#f97316'
+CYAN   = '#06b6d4'
+ROSE   = '#f43f5e'
+LIME   = '#84cc16'
+INDIGO = '#6366f1'
 
-PALETTE = [GREEN, BLUE, AMBER, PURPLE, TEAL, RED, ORANGE, CYAN, LIME, ROSE, INDIGO,
-           '#e879f9', '#f0abfc', '#67e8f9', '#bef264']
+PALETTE = [BLUE, TEAL, AMBER, PURPLE, GREEN, RED, ORANGE, CYAN, ROSE, LIME, INDIGO,
+           '#e879f9', '#67e8f9', '#bef264', '#fda4af']
 
-def _layout(height=320, legend_h=True, margins=None):
-    m = margins or dict(l=10, r=10, t=28, b=30)
-    leg = dict(bgcolor='rgba(0,0,0,0)', font=dict(color=MUTED, size=11),
-               orientation='h', yanchor='bottom', y=1.01, xanchor='right', x=1)
-    if not legend_h:
-        leg = dict(bgcolor='rgba(0,0,0,0)', font=dict(color=MUTED, size=11))
+
+def _rgba(hex_color: str, alpha: float) -> str:
+    """Convert #rrggbb + alpha to rgba(r,g,b,a) — Plotly-safe."""
+    h = hex_color.lstrip('#')
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f'rgba({r},{g},{b},{alpha})'
+
+
+def _chart(height=310, legend_h=True):
+    leg = dict(
+        bgcolor='rgba(0,0,0,0)', font=dict(color=MUTED, size=11),
+        orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1,
+    ) if legend_h else dict(bgcolor='rgba(0,0,0,0)', font=dict(color=MUTED, size=11))
     return dict(
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='Inter, sans-serif', color=TEXT, size=12),
-        height=height, margin=m, legend=leg, colorway=PALETTE,
-        xaxis=dict(gridcolor='#1f2937', linecolor=BORDER, tickcolor=MUTED,
-                   tickfont=dict(color=MUTED, size=11), zeroline=False),
-        yaxis=dict(gridcolor='#1f2937', linecolor=BORDER, tickcolor=MUTED,
-                   tickfont=dict(color=MUTED, size=11), zeroline=False),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='Inter, system-ui, sans-serif', color=TEXT, size=12),
+        height=height,
+        margin=dict(l=10, r=10, t=30, b=36),
+        legend=leg,
+        colorway=PALETTE,
+        xaxis=dict(
+            gridcolor=_rgba(BORDER, 0.6), linecolor=BORDER,
+            tickfont=dict(color=MUTED, size=11), zeroline=False, showgrid=True,
+        ),
+        yaxis=dict(
+            gridcolor=_rgba(BORDER, 0.6), linecolor=BORDER,
+            tickfont=dict(color=MUTED, size=11), zeroline=False, showgrid=True,
+        ),
         hoverlabel=dict(bgcolor=CARD2, bordercolor=BORDER, font=dict(color=TEXT, size=12)),
     )
 
+
 # ══════════════════════════════════════════════════════════════════════════════
-# DATA LOAD & PREP
+# DATA — WASHINGTON STATE (REAL)
 # ══════════════════════════════════════════════════════════════════════════════
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'ev_population.csv')
 
 _raw = pd.read_csv(DATA_PATH, low_memory=False)
 _raw.columns = [c.strip() for c in _raw.columns]
-
 _raw = _raw.rename(columns={
-    'VIN (1-10)': 'VIN', 'Electric Vehicle Type': 'EV_Type_Full',
-    'Electric Range': 'Range', 'Model Year': 'Year',
-    'Vehicle Location': 'Location', 'Electric Utility': 'Utility',
-    'Postal Code': 'ZIP', 'Legislative District': 'District',
-    'Clean Alternative Fuel Vehicle (CAFV) Eligibility': 'CAFV',
+    'Electric Vehicle Type': 'EV_Type_Full',
+    'Electric Range':        'Range',
+    'Model Year':            'Year',
+    'Vehicle Location':      'Location',
+    'Electric Utility':      'Utility',
+    'Postal Code':           'ZIP',
 })
-
-_raw['Type'] = _raw['EV_Type_Full'].map({
-    'Battery Electric Vehicle (BEV)': 'BEV',
-    'Plug-in Hybrid Electric Vehicle (PHEV)': 'PHEV',
+_raw['Type']  = _raw['EV_Type_Full'].map({
+    'Battery Electric Vehicle (BEV)':           'BEV',
+    'Plug-in Hybrid Electric Vehicle (PHEV)':   'PHEV',
 }).fillna('Other')
-
-_raw['Make'] = _raw['Make'].str.strip().str.title()
+_raw['Make']  = _raw['Make'].str.strip().str.title()
 _raw['Model'] = _raw['Model'].str.strip().str.title()
 
-# Filter to years with meaningful data
-DF = _raw[_raw['Year'].between(2015, 2025)].copy()
-DF_ALL = _raw.copy()  # for range analysis (include older EVs)
-
+DF        = _raw[_raw['Year'].between(2015, 2025)].copy()
 ALL_MAKES = ['All'] + sorted(DF['Make'].dropna().unique().tolist())
 YEARS_WA  = sorted(DF['Year'].unique().tolist())
 
-# WA County centroids
 WA_COUNTIES = {
     'Adams': (46.97,-118.56), 'Asotin': (46.34,-117.37), 'Benton': (46.22,-119.39),
     'Chelan': (47.82,-120.62), 'Clallam': (48.10,-123.80), 'Clark': (45.79,-122.49),
@@ -97,12 +114,14 @@ WA_COUNTIES = {
     'Whatcom': (48.84,-122.11), 'Whitman': (46.90,-117.40), 'Yakima': (46.65,-120.45),
 }
 
-# ── Global context data (IEA-calibrated) ─────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# DATA — GLOBAL CONTEXT (IEA-calibrated)
+# ══════════════════════════════════════════════════════════════════════════════
 
 GLOBAL_YEARS = list(range(2015, 2025))
 GLOBAL_REGIONS = {
-    'Asia-Pacific': ['China','Japan','South Korea','India'],
-    'Europe':       ['Germany','Norway','UK','France','Netherlands','Sweden','Rest of EU'],
+    'Asia-Pacific': ['China', 'Japan', 'South Korea', 'India'],
+    'Europe':       ['Germany', 'Norway', 'UK', 'France', 'Netherlands', 'Sweden', 'Rest of EU'],
     'Americas':     ['USA'],
     'Rest of World':['Rest of World'],
 }
@@ -121,251 +140,289 @@ GLOBAL_SALES = {
     'Rest of World':[0.008,0.012,0.018,0.025,0.035,0.060,0.110,0.180,0.260,0.340],
 }
 BATTERY = dict(
-    Year         =[2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
-    Cost_kWh     =[680, 540, 373, 295, 230, 185, 156, 137, 132, 138, 139, 115, 100],
-    Energy_Density=[150,160, 175, 185, 200, 215, 235, 255, 275, 295, 315, 340, 360],
-    Avg_Range_km =[180, 195, 215, 240, 265, 290, 320, 355, 385, 415, 450, 490, 530],
+    Year          =[2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],
+    Cost_kWh      =[680, 540, 373, 295, 230, 185, 156, 137, 132, 138, 139, 115, 100],
+    Energy_Density=[150, 160, 175, 185, 200, 215, 235, 255, 275, 295, 315, 340, 360],
+    Avg_Range_km  =[180, 195, 215, 240, 265, 290, 320, 355, 385, 415, 450, 490, 530],
 )
 df_battery = pd.DataFrame(BATTERY)
 
 def _get_region(c):
-    return next((r for r,cs in GLOBAL_REGIONS.items() if c in cs), 'Rest of World')
+    return next((r for r, cs in GLOBAL_REGIONS.items() if c in cs), 'Rest of World')
 
-_g = [dict(Year=y, Country=c, Region=_get_region(c), Total=v)
-      for c, vs in GLOBAL_SALES.items() for y, v in zip(GLOBAL_YEARS, vs)]
-df_global = pd.DataFrame(_g)
+df_global = pd.DataFrame([
+    dict(Year=y, Country=c, Region=_get_region(c), Total=v)
+    for c, vs in GLOBAL_SALES.items()
+    for y, v in zip(GLOBAL_YEARS, vs)
+])
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LAYOUT HELPERS
+# LAYOUT COMPONENTS
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _card(children, style=None):
-    s = {'background':CARD,'border':f'1px solid {BORDER}','borderRadius':'12px','padding':'4px 4px 0'}
-    if style: s.update(style)
+def _panel(children, flex=1, style=None):
+    s = {
+        'background': CARD, 'border': f'1px solid {BORDER}', 'borderRadius': '8px',
+        'padding': '0', 'flex': str(flex), 'minWidth': '0', 'overflow': 'hidden',
+    }
+    if style:
+        s.update(style)
     return html.Div(children, style=s)
 
-def _title(t, sub=''):
+
+def _panel_header(title, subtitle=''):
     return html.Div([
-        html.Div(t, style={'fontSize':'13px','fontWeight':'600','color':TEXT,
-                           'padding':'12px 16px 0','letterSpacing':'0.2px'}),
-        html.Div(sub, style={'fontSize':'11px','color':MUTED,'padding':'1px 16px 4px'}) if sub else '',
+        html.Div(title, style={
+            'fontSize': '13px', 'fontWeight': '600', 'color': TEXT,
+            'padding': '14px 16px 0', 'letterSpacing': '-0.1px',
+        }),
+        html.Div(subtitle, style={
+            'fontSize': '11px', 'color': MUTED, 'padding': '2px 16px 8px',
+        }) if subtitle else '',
     ])
 
-def _kpi(icon, label, vid, color=GREEN, did=None):
+
+def _row(*children, gap='12px', mb='12px', wrap=False):
+    return html.Div(list(children), style={
+        'display': 'flex', 'gap': gap, 'marginBottom': mb,
+        'flexWrap': 'wrap' if wrap else 'nowrap',
+    })
+
+
+def _kpi_card(label, value_id, delta_id=None, accent=BLUE):
     return html.Div([
-        html.Div([html.Span(icon, style={'fontSize':'20px'}),
-                  html.Div(label, style={'fontSize':'10px','color':MUTED,'marginTop':'3px',
-                                         'textTransform':'uppercase','letterSpacing':'0.6px','fontWeight':'600'})],
-                 style={'display':'flex','alignItems':'center','gap':'9px'}),
-        html.H2(id=vid, style={'fontSize':'1.8rem','fontWeight':'700','color':color,
-                               'margin':'6px 0 1px','lineHeight':'1'}),
-        html.Div(id=did, style={'fontSize':'11px','fontWeight':'500','color':MUTED}) if did else '',
-    ], style={'background':CARD,'border':f'1px solid {BORDER}','borderRadius':'12px',
-              'padding':'16px 20px','flex':'1','minWidth':'170px'})
+        html.Div(label, style={
+            'fontSize': '11px', 'fontWeight': '500', 'color': MUTED,
+            'textTransform': 'uppercase', 'letterSpacing': '0.8px', 'marginBottom': '10px',
+        }),
+        html.Div(id=value_id, style={
+            'fontSize': '2rem', 'fontWeight': '700', 'color': TEXT,
+            'lineHeight': '1', 'fontVariantNumeric': 'tabular-nums',
+        }),
+        html.Div(id=delta_id, style={
+            'fontSize': '11px', 'fontWeight': '500', 'color': MUTED, 'marginTop': '4px',
+        }) if delta_id else '',
+        html.Div(style={
+            'height': '2px', 'background': accent, 'borderRadius': '1px',
+            'marginTop': '12px', 'width': '28px',
+        }),
+    ], style={
+        'background': CARD, 'border': f'1px solid {BORDER}', 'borderRadius': '8px',
+        'padding': '16px 18px', 'flex': '1', 'minWidth': '160px',
+    })
 
-def _row(*children, gap='16px', mb='16px'):
-    return html.Div(list(children), style={'display':'flex','gap':gap,'marginBottom':mb,'flexWrap':'wrap'})
 
-def _tab_style(sel=False):
-    base = {'background':CARD,'border':f'1px solid {BORDER}','borderBottom':'none',
-            'borderRadius':'8px 8px 0 0','fontSize':'13px','fontWeight':'500',
-            'padding':'9px 16px','marginRight':'4px','color':MUTED}
-    if sel:
-        base.update({'background':CARD2,'borderColor':BLUE,'color':BLUE,'fontWeight':'600'})
-    return base
+def _tab_s():
+    return {
+        'background': CARD, 'border': f'1px solid {BORDER}', 'borderBottom': 'none',
+        'borderRadius': '6px 6px 0 0', 'color': MUTED, 'fontSize': '12px',
+        'fontWeight': '500', 'padding': '9px 16px', 'marginRight': '3px',
+        'fontFamily': 'Inter, system-ui, sans-serif',
+    }
 
-def _tab_content(children):
-    return html.Div(children, style={'background':BG,'border':f'1px solid {BORDER}',
-                                     'borderRadius':'0 8px 8px 8px','padding':'18px'})
+
+def _tab_sel():
+    s = _tab_s()
+    s.update({'background': CARD2, 'borderColor': BLUE, 'color': TEXT, 'fontWeight': '600'})
+    return s
+
+
+def _tab_body(children):
+    return html.Div(children, style={
+        'background': BG, 'border': f'1px solid {BORDER}',
+        'borderRadius': '0 6px 6px 6px', 'padding': '16px',
+    })
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # APP
 # ══════════════════════════════════════════════════════════════════════════════
 
-app = dash.Dash(__name__, suppress_callback_exceptions=True, title='EV Energy Dashboard')
-server = app.server  # for gunicorn
+app = dash.Dash(__name__, suppress_callback_exceptions=True, title='EV Dashboard')
+server = app.server
 
-_yr_marks = {y: {'label':str(y),'style':{'color':MUTED,'fontSize':'10px'}}
-             for y in YEARS_WA if y % 2 == 1}
+_yr_marks = {
+    y: {'label': str(y), 'style': {'color': MUTED, 'fontSize': '10px'}}
+    for y in YEARS_WA if y % 2 == 1
+}
 
 app.layout = html.Div([
 
     # ── Header ────────────────────────────────────────────────────────────────
     html.Div([
         html.Div([
-            html.Span('⚡', style={'fontSize':'26px'}),
-            html.Div([
-                html.H1('EV Energy Dashboard',
-                        style={'fontSize':'17px','fontWeight':'700','color':TEXT,'margin':'0'}),
-                html.Div('Washington State · 280,000+ Real EV Registrations + Global IEA Context',
-                         style={'fontSize':'11px','color':MUTED,'marginTop':'2px'}),
-            ]),
-        ], style={'display':'flex','alignItems':'center','gap':'11px'}),
-        html.Div([
-            html.Span('REAL DATA', style={
-                'background':'linear-gradient(90deg,#238636,#2ea043)',
-                'color':'#fff','fontSize':'10px','fontWeight':'700',
-                'padding':'3px 9px','borderRadius':'20px','letterSpacing':'0.5px'}),
-            html.Span('Source: data.wa.gov | IEA EV Outlook',
-                      style={'color':MUTED,'fontSize':'11px','marginLeft':'10px'}),
-        ], style={'display':'flex','alignItems':'center'}),
+            html.Div('EV Market Dashboard', style={
+                'fontSize': '15px', 'fontWeight': '700', 'color': TEXT,
+                'letterSpacing': '-0.3px',
+            }),
+            html.Div('Washington State · 280 k+ registrations · IEA global context',
+                     style={'fontSize': '11px', 'color': MUTED, 'marginTop': '2px'}),
+        ]),
+        html.Div('data.wa.gov  |  IEA EV Outlook', style={
+            'fontSize': '11px', 'color': FAINT,
+        }),
     ], style={
-        'background':'linear-gradient(135deg,#0d1117 0%,#161b22 60%,#1c2333 100%)',
-        'borderBottom':f'1px solid {BORDER}','padding':'14px 32px',
-        'display':'flex','alignItems':'center','justifyContent':'space-between',
-        'position':'sticky','top':'0','zIndex':'100',
+        'background': CARD, 'borderBottom': f'1px solid {BORDER}',
+        'padding': '14px 28px', 'display': 'flex', 'alignItems': 'center',
+        'justifyContent': 'space-between', 'position': 'sticky', 'top': '0', 'zIndex': '100',
     }),
 
     # ── KPI Row ───────────────────────────────────────────────────────────────
     html.Div([
-        _kpi('🚗','Total EVs Registered', 'kpi-total', GREEN,  'kpi-total-d'),
-        _kpi('⚡','Battery EVs (BEV)',     'kpi-bev',   BLUE,   'kpi-bev-d'),
-        _kpi('🔌','Plug-in Hybrids (PHEV)','kpi-phev',  AMBER,  'kpi-phev-d'),
-        _kpi('🏆','Market Leader',         'kpi-top',   PURPLE, 'kpi-top-d'),
-    ], style={'display':'flex','gap':'14px','padding':'20px 32px 0','flexWrap':'wrap'}),
+        _kpi_card('Total Registered EVs',  'kpi-total', 'kpi-total-d', BLUE),
+        _kpi_card('Battery Electric (BEV)','kpi-bev',   'kpi-bev-d',   TEAL),
+        _kpi_card('Plug-in Hybrid (PHEV)', 'kpi-phev',  'kpi-phev-d',  AMBER),
+        _kpi_card('Market Leader',         'kpi-top',   'kpi-top-d',   PURPLE),
+    ], style={'display': 'flex', 'gap': '12px', 'padding': '18px 28px 0', 'flexWrap': 'wrap'}),
 
-    # ── Filters ───────────────────────────────────────────────────────────────
+    # ── Filter Bar ────────────────────────────────────────────────────────────
     html.Div([
         html.Div([
-            html.Div('Model Year', style={'fontSize':'10px','color':MUTED,'fontWeight':'600',
-                                           'textTransform':'uppercase','letterSpacing':'0.6px','marginBottom':'8px'}),
-            dcc.RangeSlider(id='yr-slider', min=2015, max=2025, step=1, value=[2015,2025],
-                            marks=_yr_marks, allowCross=False,
-                            tooltip={'placement':'bottom','always_visible':False}),
-        ], style={'flex':'3','minWidth':'260px'}),
+            html.Div('Model Year', style={
+                'fontSize': '10px', 'color': MUTED, 'fontWeight': '600',
+                'textTransform': 'uppercase', 'letterSpacing': '0.7px', 'marginBottom': '8px',
+            }),
+            dcc.RangeSlider(
+                id='yr-slider', min=2015, max=2025, step=1, value=[2015, 2025],
+                marks=_yr_marks, allowCross=False,
+                tooltip={'placement': 'bottom', 'always_visible': False},
+            ),
+        ], style={'flex': '3', 'minWidth': '240px'}),
         html.Div([
-            html.Div('EV Type', style={'fontSize':'10px','color':MUTED,'fontWeight':'600',
-                                        'textTransform':'uppercase','letterSpacing':'0.6px','marginBottom':'6px'}),
-            dcc.RadioItems(id='type-filter', value='All', inline=True,
-                           options=[{'label':' All','value':'All'},
-                                    {'label':' BEV','value':'BEV'},
-                                    {'label':' PHEV','value':'PHEV'}],
-                           inputStyle={'marginRight':'4px'},
-                           labelStyle={'marginRight':'14px','color':MUTED,'fontSize':'13px'}),
-        ], style={'flex':'1'}),
+            html.Div('EV Type', style={
+                'fontSize': '10px', 'color': MUTED, 'fontWeight': '600',
+                'textTransform': 'uppercase', 'letterSpacing': '0.7px', 'marginBottom': '7px',
+            }),
+            dcc.RadioItems(
+                id='type-filter', value='All', inline=True,
+                options=[{'label': ' All', 'value': 'All'},
+                         {'label': ' BEV', 'value': 'BEV'},
+                         {'label': ' PHEV', 'value': 'PHEV'}],
+                inputStyle={'marginRight': '4px'},
+                labelStyle={'marginRight': '14px', 'color': MUTED, 'fontSize': '12px'},
+            ),
+        ], style={'flex': '1'}),
         html.Div([
-            html.Div('Make', style={'fontSize':'10px','color':MUTED,'fontWeight':'600',
-                                     'textTransform':'uppercase','letterSpacing':'0.6px','marginBottom':'6px'}),
-            dcc.Dropdown(id='make-filter', options=[{'label':m,'value':m} for m in ALL_MAKES],
-                         value='All', clearable=False,
-                         style={'background':CARD2,'border':f'1px solid {BORDER}',
-                                'color':TEXT,'minWidth':'160px'}),
-        ], style={'flex':'1.2'}),
+            html.Div('Make', style={
+                'fontSize': '10px', 'color': MUTED, 'fontWeight': '600',
+                'textTransform': 'uppercase', 'letterSpacing': '0.7px', 'marginBottom': '6px',
+            }),
+            dcc.Dropdown(
+                id='make-filter',
+                options=[{'label': m, 'value': m} for m in ALL_MAKES],
+                value='All', clearable=False,
+                style={'background': CARD2, 'border': f'1px solid {BORDER}', 'minWidth': '150px'},
+            ),
+        ], style={'flex': '1'}),
     ], style={
-        'display':'flex','alignItems':'center','gap':'28px','padding':'14px 26px',
-        'background':CARD,'border':f'1px solid {BORDER}','borderRadius':'12px',
-        'margin':'18px 32px 0','flexWrap':'wrap',
+        'display': 'flex', 'alignItems': 'center', 'gap': '28px',
+        'padding': '14px 24px', 'background': CARD, 'border': f'1px solid {BORDER}',
+        'borderRadius': '8px', 'margin': '16px 28px 0', 'flexWrap': 'wrap',
     }),
 
     # ── Tabs ──────────────────────────────────────────────────────────────────
     html.Div([
         dcc.Tabs(id='main-tabs', value='overview', children=[
 
-            # ─── Tab 1: Fleet Overview ──────────────────────────────────────
-            dcc.Tab(label='📊  Fleet Overview', value='overview',
-                    style=_tab_style(), selected_style=_tab_style(True),
-                    children=_tab_content([
+            dcc.Tab(label='Fleet Overview',  value='overview',
+                    style=_tab_s(), selected_style=_tab_sel(),
+                    children=_tab_body([
                         _row(
-                            _card([_title('Registrations by Model Year','Annual EV fleet growth'),
-                                   dcc.Graph(id='ov-year-bar', config={'displayModeBar':False})], {'flex':'2'}),
-                            _card([_title('BEV vs PHEV Split','Battery vs Plug-in Hybrid'),
-                                   dcc.Graph(id='ov-type-pie', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Registrations by Model Year', 'Annual fleet growth · BEV vs PHEV'),
+                                    dcc.Graph(id='ov-year-bar', config={'displayModeBar': False})], flex=2),
+                            _panel([_panel_header('BEV vs PHEV Split', 'Battery vs Plug-in Hybrid'),
+                                    dcc.Graph(id='ov-type-pie', config={'displayModeBar': False})], flex=1),
                         ),
                         _row(
-                            _card([_title('Top 15 Makes','By registered vehicle count'),
-                                   dcc.Graph(id='ov-make-bar', config={'displayModeBar':False})], {'flex':'1'}),
-                            _card([_title('Top 15 Models','Most popular EV models'),
-                                   dcc.Graph(id='ov-model-bar', config={'displayModeBar':False})], {'flex':'1'}),
-                        ),
-                    ])),
-
-            # ─── Tab 2: Manufacturers ───────────────────────────────────────
-            dcc.Tab(label='🏭  Manufacturers', value='mfr',
-                    style=_tab_style(), selected_style=_tab_style(True),
-                    children=_tab_content([
-                        _row(
-                            _card([_title('Market Share','% of total registrations'),
-                                   dcc.Graph(id='mf-pie', config={'displayModeBar':False})], {'flex':'1.2'}),
-                            _card([_title('BEV vs PHEV by Make','Top 12 manufacturers'),
-                                   dcc.Graph(id='mf-type-bar', config={'displayModeBar':False})], {'flex':'2'}),
-                        ),
-                        _row(
-                            _card([_title('Make Popularity Over Years','Registration count by model year'),
-                                   dcc.Graph(id='mf-trend', config={'displayModeBar':False})], {'flex':'2'}),
-                            _card([_title('Average Electric Range by Make','Miles · BEV only'),
-                                   dcc.Graph(id='mf-range', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Top 15 Makes', 'By registered vehicle count'),
+                                    dcc.Graph(id='ov-make-bar', config={'displayModeBar': False})]),
+                            _panel([_panel_header('Top 15 Models', 'Most popular EV models'),
+                                    dcc.Graph(id='ov-model-bar', config={'displayModeBar': False})]),
                         ),
                     ])),
 
-            # ─── Tab 3: Models & Range ──────────────────────────────────────
-            dcc.Tab(label='🔋  Models & Range', value='models',
-                    style=_tab_style(), selected_style=_tab_style(True),
-                    children=_tab_content([
+            dcc.Tab(label='Manufacturers', value='mfr',
+                    style=_tab_s(), selected_style=_tab_sel(),
+                    children=_tab_body([
                         _row(
-                            _card([_title('Electric Range Distribution','Miles · BEVs only'),
-                                   dcc.Graph(id='md-hist', config={'displayModeBar':False})], {'flex':'2'}),
-                            _card([_title('Avg Range by Model Year','BEV fleet progress'),
-                                   dcc.Graph(id='md-range-year', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Market Share', '% of total registrations'),
+                                    dcc.Graph(id='mf-pie', config={'displayModeBar': False})], flex='1.2'),
+                            _panel([_panel_header('BEV vs PHEV by Make', 'Top 12 manufacturers'),
+                                    dcc.Graph(id='mf-type-bar', config={'displayModeBar': False})], flex=2),
                         ),
                         _row(
-                            _card([_title('Top 20 Models by Electric Range','Maximum rated range · miles'),
-                                   dcc.Graph(id='md-top-range', config={'displayModeBar':False})], {'flex':'1'}),
-                            _card([_title('Model Volume vs Avg Range','Bubble = registration count'),
-                                   dcc.Graph(id='md-scatter', config={'displayModeBar':False})], {'flex':'1'}),
-                        ),
-                    ])),
-
-            # ─── Tab 4: Geography ───────────────────────────────────────────
-            dcc.Tab(label='🗺️  Geography', value='geo',
-                    style=_tab_style(), selected_style=_tab_style(True),
-                    children=_tab_content([
-                        _row(
-                            _card([_title('EV Registrations by County','Bubble size = count'),
-                                   dcc.Graph(id='geo-map', config={'displayModeBar':False})],
-                                  {'flex':'2'}),
-                            _card([_title('Top 15 Counties','Registered EVs'),
-                                   dcc.Graph(id='geo-county', config={'displayModeBar':False})],
-                                  {'flex':'1'}),
-                        ),
-                        _row(
-                            _card([_title('Top 20 Cities','Registered EVs'),
-                                   dcc.Graph(id='geo-city', config={'displayModeBar':False})], {'flex':'1'}),
-                            _card([_title('Electric Utility Distribution','Which grid powers WA EVs'),
-                                   dcc.Graph(id='geo-utility', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Registration Trend by Make', 'Top 6 · annual count'),
+                                    dcc.Graph(id='mf-trend', config={'displayModeBar': False})], flex=2),
+                            _panel([_panel_header('Avg Electric Range by Make', 'Miles · BEV registrations only'),
+                                    dcc.Graph(id='mf-range', config={'displayModeBar': False})], flex=1),
                         ),
                     ])),
 
-            # ─── Tab 5: Global Context ──────────────────────────────────────
-            dcc.Tab(label='🌍  Global Context', value='global',
-                    style=_tab_style(), selected_style=_tab_style(True),
-                    children=_tab_content([
+            dcc.Tab(label='Models & Range', value='models',
+                    style=_tab_s(), selected_style=_tab_sel(),
+                    children=_tab_body([
                         _row(
-                            _card([_title('Global EV Sales by Region 2015–2024','Million units · IEA data'),
-                                   dcc.Graph(id='gl-sales', config={'displayModeBar':False})], {'flex':'2'}),
-                            _card([_title('Battery Pack Cost Trend','$/kWh · BloombergNEF'),
-                                   dcc.Graph(id='gl-battery', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Range Distribution', 'Miles · BEVs with known range'),
+                                    dcc.Graph(id='md-hist', config={'displayModeBar': False})], flex=2),
+                            _panel([_panel_header('Avg Range by Model Year', 'Fleet mean & median · BEV'),
+                                    dcc.Graph(id='md-range-year', config={'displayModeBar': False})], flex=1),
                         ),
                         _row(
-                            _card([_title('Top Countries – Annual EV Sales','Millions of units'),
-                                   dcc.Graph(id='gl-countries', config={'displayModeBar':False})], {'flex':'1'}),
-                            _card([_title('WA State vs Global','WA % of US EV market & avg range vs global avg'),
-                                   dcc.Graph(id='gl-wa-vs-global', config={'displayModeBar':False})], {'flex':'1'}),
+                            _panel([_panel_header('Top 20 Models by Max Range', 'Rated range in miles'),
+                                    dcc.Graph(id='md-top-range', config={'displayModeBar': False})]),
+                            _panel([_panel_header('Volume vs Avg Range', 'Bubble size = registration count'),
+                                    dcc.Graph(id='md-scatter', config={'displayModeBar': False})]),
                         ),
                     ])),
 
-        ], colors={'border':BORDER,'primary':BLUE,'background':BG}),
-    ], style={'margin':'0 32px'}),
+            dcc.Tab(label='Geography', value='geo',
+                    style=_tab_s(), selected_style=_tab_sel(),
+                    children=_tab_body([
+                        _row(
+                            _panel([_panel_header('EV Registrations by County', 'Bubble size proportional to count'),
+                                    dcc.Graph(id='geo-map', config={'displayModeBar': False})], flex=2),
+                            _panel([_panel_header('Top 15 Counties', 'Registered EV count'),
+                                    dcc.Graph(id='geo-county', config={'displayModeBar': False})], flex=1),
+                        ),
+                        _row(
+                            _panel([_panel_header('Top 20 Cities'),
+                                    dcc.Graph(id='geo-city', config={'displayModeBar': False})]),
+                            _panel([_panel_header('Electric Utility Distribution', 'Grid operator share'),
+                                    dcc.Graph(id='geo-utility', config={'displayModeBar': False})]),
+                        ),
+                    ])),
 
-    # ── Footer ────────────────────────────────────────────────────────────────
-    html.Div('⚡ EV Energy Dashboard · Washington State DOL + IEA Global EV Outlook · Built with Dash & Plotly',
-             style={'textAlign':'center','padding':'18px','color':MUTED,'fontSize':'11px',
-                    'marginTop':'20px','borderTop':f'1px solid {BORDER}'}),
+            dcc.Tab(label='Global Context', value='global',
+                    style=_tab_s(), selected_style=_tab_sel(),
+                    children=_tab_body([
+                        _row(
+                            _panel([_panel_header('Global EV Sales by Region 2015–2024', 'Million units · IEA'),
+                                    dcc.Graph(id='gl-sales', config={'displayModeBar': False})], flex=2),
+                            _panel([_panel_header('Battery Pack Cost', '$/kWh · BloombergNEF'),
+                                    dcc.Graph(id='gl-battery', config={'displayModeBar': False})], flex=1),
+                        ),
+                        _row(
+                            _panel([_panel_header('Top Countries by Total Sales', 'Millions of units · period total'),
+                                    dcc.Graph(id='gl-countries', config={'displayModeBar': False})]),
+                            _panel([_panel_header('WA State Share of US EV Market', '% of annual US sales'),
+                                    dcc.Graph(id='gl-wa-vs-global', config={'displayModeBar': False})]),
+                        ),
+                    ])),
 
-], style={'backgroundColor':BG,'minHeight':'100vh','fontFamily':'Inter, sans-serif'})
+        ], colors={'border': BORDER, 'primary': BLUE, 'background': BG}),
+    ], style={'margin': '0 28px'}),
+
+    html.Div('EV Market Dashboard  ·  Washington State DOL  ·  IEA Global EV Outlook',
+             style={
+                 'textAlign': 'center', 'padding': '16px', 'color': FAINT,
+                 'fontSize': '11px', 'marginTop': '16px', 'borderTop': f'1px solid {BORDER}',
+             }),
+
+], style={'backgroundColor': BG, 'minHeight': '100vh', 'fontFamily': 'Inter, system-ui, sans-serif'})
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SHARED FILTER HELPER
+# FILTER HELPER
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _filter(yr_range, ev_type, make):
@@ -379,39 +436,38 @@ def _filter(yr_range, ev_type, make):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — KPIs
+# KPIs
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
-    Output('kpi-total','children'), Output('kpi-total-d','children'),
-    Output('kpi-bev',  'children'), Output('kpi-bev-d',  'children'),
-    Output('kpi-phev', 'children'), Output('kpi-phev-d', 'children'),
-    Output('kpi-top',  'children'), Output('kpi-top-d',  'children'),
+    Output('kpi-total',   'children'), Output('kpi-total-d',  'children'),
+    Output('kpi-bev',     'children'), Output('kpi-bev-d',    'children'),
+    Output('kpi-phev',    'children'), Output('kpi-phev-d',   'children'),
+    Output('kpi-top',     'children'), Output('kpi-top-d',    'children'),
     Input('yr-slider',   'value'),
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def update_kpis(yr_range, ev_type, make):
-    d = _filter(yr_range, ev_type, make)
-    total = len(d)
-    bev   = (d['Type'] == 'BEV').sum()
-    phev  = (d['Type'] == 'PHEV').sum()
-
-    # prev year comparison
+def cb_kpis(yr_range, ev_type, make):
+    d      = _filter(yr_range, ev_type, make)
     yr0, yr1 = yr_range
-    d_prev = _filter([yr0, max(yr0, yr1-1)], ev_type, make)
-    t_prev = len(d_prev) if yr1 > yr0 else total
-    delta  = ((total - t_prev) / t_prev * 100) if t_prev else 0
+    total  = len(d)
+    bev    = (d['Type'] == 'BEV').sum()
+    phev   = (d['Type'] == 'PHEV').sum()
 
-    top_make  = d['Make'].value_counts().index[0] if total else 'N/A'
+    d_prev = _filter([yr0, max(yr0, yr1 - 1)], ev_type, make)
+    t_prev = len(d_prev) if yr1 > yr0 else total
+    delta  = (total - t_prev) / t_prev * 100 if t_prev else 0
+
+    top_make  = d['Make'].value_counts().index[0]  if total else 'N/A'
     top_share = d['Make'].value_counts().iloc[0] / total * 100 if total else 0
 
-    arrow = lambda v: ('▲ ' if v >= 0 else '▼ ') + f'{abs(v):.1f}%'
-    g = lambda v: {'color': GREEN if v >= 0 else RED}
+    arrow = lambda v: ('+ ' if v >= 0 else '- ') + f'{abs(v):.1f}%'
+    col   = lambda v: {'color': GREEN if v >= 0 else RED}
 
     return (
         f'{total:,}',
-        html.Span(arrow(delta) + f' vs {yr0}–{max(yr0,yr1-1)}', style=g(delta)),
+        html.Span(arrow(delta) + f'  vs {yr0}–{max(yr0, yr1-1)}', style=col(delta)),
         f'{bev:,}',
         html.Span(f'{bev/total*100:.1f}% of fleet' if total else '—', style={'color': MUTED}),
         f'{phev:,}',
@@ -422,7 +478,7 @@ def update_kpis(yr_range, ev_type, make):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — Tab 1: Fleet Overview
+# TAB 1 — FLEET OVERVIEW
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
@@ -434,67 +490,69 @@ def update_kpis(yr_range, ev_type, make):
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def tab_overview(yr_range, ev_type, make):
+def cb_overview(yr_range, ev_type, make):
     d = _filter(yr_range, ev_type, make)
 
-    # 1. Registrations by year, split BEV / PHEV
-    yr_type = d.groupby(['Year','Type']).size().reset_index(name='Count')
+    # Registrations by year
+    yr_type = d.groupby(['Year', 'Type']).size().reset_index(name='Count')
     fig1 = go.Figure()
     for t, color in [('BEV', BLUE), ('PHEV', AMBER)]:
         sub = yr_type[yr_type.Type == t]
         fig1.add_trace(go.Bar(
             x=sub.Year, y=sub.Count, name=t,
-            marker=dict(color=color, opacity=0.85),
-            hovertemplate='<b>%{x} %{fullData.name}</b>: %{y:,}<extra></extra>',
+            marker=dict(color=color),
+            hovertemplate='<b>%{x}  %{fullData.name}</b>: %{y:,}<extra></extra>',
         ))
-    fig1.update_layout(**_layout(height=290), barmode='stack')
-    fig1.update_layout(yaxis_title='Registrations')
+    fig1.update_layout(**_chart(height=290), barmode='stack')
+    fig1.update_layout(yaxis_title='Registrations', bargap=0.3)
 
-    # 2. BEV vs PHEV donut
-    type_counts = d['Type'].value_counts()
+    # BEV vs PHEV donut
+    tc = d['Type'].value_counts()
     fig2 = go.Figure(go.Pie(
-        labels=type_counts.index, values=type_counts.values, hole=0.55,
+        labels=tc.index, values=tc.values, hole=0.58,
         marker=dict(colors=[BLUE, AMBER], line=dict(color=BG, width=2)),
         textinfo='label+percent', textfont=dict(size=11, color=TEXT),
-        hovertemplate='<b>%{label}</b>: %{value:,} (%{percent})<extra></extra>',
+        hovertemplate='<b>%{label}</b>: %{value:,}  (%{percent})<extra></extra>',
     ))
-    fig2.update_layout(**_layout(height=290), showlegend=False)
+    fig2.update_layout(**_chart(height=290), showlegend=False)
     fig2.update_layout(
-        annotations=[dict(text=f'{len(d):,}', x=0.5, y=0.5,
-                          font=dict(size=15, color=TEXT, family='Inter'), showarrow=False)],
-        margin=dict(l=10,r=10,t=20,b=10),
+        margin=dict(l=10, r=10, t=20, b=10),
+        annotations=[dict(
+            text=f'{len(d):,}', x=0.5, y=0.5,
+            font=dict(size=14, color=TEXT, family='Inter'), showarrow=False,
+        )],
     )
 
-    # 3. Top 15 makes
-    make_ct = d['Make'].value_counts().head(15).reset_index()
-    make_ct.columns = ['Make','Count']
-    make_ct = make_ct.sort_values('Count')
+    # Top 15 makes
+    mc = d['Make'].value_counts().head(15).reset_index()
+    mc.columns = ['Make', 'Count']
+    mc = mc.sort_values('Count')
     fig3 = go.Figure(go.Bar(
-        x=make_ct.Count, y=make_ct.Make, orientation='h',
-        marker=dict(color=PALETTE[:len(make_ct)], opacity=0.85),
+        x=mc.Count, y=mc.Make, orientation='h',
+        marker=dict(color=BLUE, opacity=0.85),
         hovertemplate='<b>%{y}</b>: %{x:,}<extra></extra>',
     ))
-    fig3.update_layout(**_layout(height=290), showlegend=False)
-    fig3.update_layout(margin=dict(l=110,r=10,t=20,b=30))
+    fig3.update_layout(**_chart(height=290), showlegend=False)
+    fig3.update_layout(margin=dict(l=110, r=10, t=20, b=30))
 
-    # 4. Top 15 models
+    # Top 15 models — two-tone: top 3 highlighted
     model_ct = d['Model'].value_counts().head(15).reset_index()
-    model_ct.columns = ['Model','Count']
+    model_ct.columns = ['Model', 'Count']
     model_ct = model_ct.sort_values('Count')
+    colors_m = [TEAL if i >= 12 else _rgba(TEAL, 0.4) for i in range(len(model_ct))]
     fig4 = go.Figure(go.Bar(
         x=model_ct.Count, y=model_ct.Model, orientation='h',
-        marker=dict(color=[GREEN if i >= 12 else f'{GREEN}77' for i in range(len(model_ct))],
-                    opacity=0.85),
+        marker=dict(color=colors_m),
         hovertemplate='<b>%{y}</b>: %{x:,}<extra></extra>',
     ))
-    fig4.update_layout(**_layout(height=290), showlegend=False)
-    fig4.update_layout(margin=dict(l=130,r=10,t=20,b=30))
+    fig4.update_layout(**_chart(height=290), showlegend=False)
+    fig4.update_layout(margin=dict(l=130, r=10, t=20, b=30))
 
     return fig1, fig2, fig3, fig4
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — Tab 2: Manufacturers
+# TAB 2 — MANUFACTURERS
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
@@ -506,77 +564,76 @@ def tab_overview(yr_range, ev_type, make):
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def tab_manufacturers(yr_range, ev_type, make):
+def cb_manufacturers(yr_range, ev_type, make):
     d = _filter(yr_range, ev_type, make)
-
-    # 1. Market share donut (top 10 + others)
     mc = d['Make'].value_counts()
-    top10 = mc.head(10)
-    other = mc.iloc[10:].sum()
+
+    # Market share donut
+    top10  = mc.head(10)
+    other  = mc.iloc[10:].sum()
     labels = list(top10.index) + (['Others'] if other > 0 else [])
-    values = list(top10.values) + ([other] if other > 0 else [])
+    values = list(top10.values) + ([other]   if other > 0 else [])
     fig1 = go.Figure(go.Pie(
-        labels=labels, values=values, hole=0.5,
+        labels=labels, values=values, hole=0.52,
         marker=dict(colors=PALETTE[:len(labels)], line=dict(color=BG, width=2)),
         textinfo='label+percent', textfont=dict(size=10, color=TEXT),
-        hovertemplate='<b>%{label}</b>: %{value:,} (%{percent})<extra></extra>',
         insidetextorientation='radial',
+        hovertemplate='<b>%{label}</b>: %{value:,}  (%{percent})<extra></extra>',
     ))
-    fig1.update_layout(**_layout(height=320), showlegend=False)
-    fig1.update_layout(margin=dict(l=10,r=10,t=20,b=10))
+    fig1.update_layout(**_chart(height=320), showlegend=False)
+    fig1.update_layout(margin=dict(l=10, r=10, t=20, b=10))
 
-    # 2. BEV vs PHEV by make (top 12)
+    # BEV vs PHEV by make
     top12 = mc.head(12).index.tolist()
-    sub = d[d['Make'].isin(top12)]
-    mt = sub.groupby(['Make','Type']).size().reset_index(name='Count')
-    mt_bev  = mt[mt.Type=='BEV']
-    mt_phev = mt[mt.Type=='PHEV']
+    sub   = d[d['Make'].isin(top12)]
+    mt    = sub.groupby(['Make', 'Type']).size().reset_index(name='Count')
     order = top12[::-1]
-    fig2 = go.Figure()
-    fig2.add_trace(go.Bar(name='BEV', y=[m for m in order],
-                          x=[mt_bev[mt_bev.Make==m]['Count'].sum() for m in order],
-                          orientation='h', marker=dict(color=BLUE, opacity=0.85),
-                          hovertemplate='BEV <b>%{y}</b>: %{x:,}<extra></extra>'))
-    fig2.add_trace(go.Bar(name='PHEV', y=[m for m in order],
-                          x=[mt_phev[mt_phev.Make==m]['Count'].sum() for m in order],
-                          orientation='h', marker=dict(color=AMBER, opacity=0.85),
-                          hovertemplate='PHEV <b>%{y}</b>: %{x:,}<extra></extra>'))
-    fig2.update_layout(**_layout(height=320), barmode='stack')
-    fig2.update_layout(margin=dict(l=110,r=10,t=28,b=30))
+    fig2  = go.Figure()
+    for t, color in [('BEV', BLUE), ('PHEV', AMBER)]:
+        sub_t = mt[mt.Type == t]
+        fig2.add_trace(go.Bar(
+            name=t, orientation='h',
+            y=order,
+            x=[sub_t[sub_t.Make == m]['Count'].sum() for m in order],
+            marker=dict(color=color),
+            hovertemplate=f'{t}  <b>%{{y}}</b>: %{{x:,}}<extra></extra>',
+        ))
+    fig2.update_layout(**_chart(height=320), barmode='stack')
+    fig2.update_layout(margin=dict(l=110, r=10, t=28, b=30))
 
-    # 3. Top 6 makes trend by year
-    top6 = mc.head(6).index.tolist()
-    sub6 = d[d['Make'].isin(top6)]
-    trend = sub6.groupby(['Year','Make']).size().reset_index(name='Count')
-    fig3 = go.Figure()
+    # Registration trend — top 6
+    top6  = mc.head(6).index.tolist()
+    trend = d[d['Make'].isin(top6)].groupby(['Year', 'Make']).size().reset_index(name='Count')
+    fig3  = go.Figure()
     for i, mk in enumerate(top6):
         s = trend[trend.Make == mk]
         fig3.add_trace(go.Scatter(
             x=s.Year, y=s.Count, name=mk, mode='lines+markers',
-            line=dict(color=PALETTE[i], width=2.5),
+            line=dict(color=PALETTE[i], width=2),
             marker=dict(size=5),
-            hovertemplate=f'<b>{mk}</b> %{{x}}: %{{y:,}}<extra></extra>',
+            hovertemplate=f'<b>{mk}</b>  %{{x}}: %{{y:,}}<extra></extra>',
         ))
-    fig3.update_layout(**_layout(height=320))
+    fig3.update_layout(**_chart(height=320))
     fig3.update_layout(yaxis_title='Registrations', hovermode='x unified')
 
-    # 4. Avg range by make (BEV only)
-    bev_d = d[(d['Type']=='BEV') & (d['Range']>0)]
-    rng = bev_d.groupby('Make')['Range'].mean().sort_values(ascending=False).head(15)
-    rng = rng.sort_values()
+    # Avg range by make (BEV only)
+    bev_d = d[(d['Type'] == 'BEV') & (d['Range'] > 0)]
+    rng   = bev_d.groupby('Make')['Range'].mean().sort_values(ascending=False).head(15)
+    rng   = rng.sort_values()
+    bar_colors = [TEAL if v >= rng.median() else _rgba(TEAL, 0.4) for v in rng.values]
     fig4 = go.Figure(go.Bar(
         x=rng.values, y=rng.index, orientation='h',
-        marker=dict(color=[GREEN if v >= rng.median() else f'{GREEN}66' for v in rng.values]),
+        marker=dict(color=bar_colors),
         hovertemplate='<b>%{y}</b>: %{x:.0f} mi<extra></extra>',
     ))
-    fig4.update_layout(**_layout(height=320), showlegend=False)
-    fig4.update_layout(xaxis_title='Avg Range (miles)', margin=dict(l=120,r=10,t=20,b=30))
+    fig4.update_layout(**_chart(height=320), showlegend=False)
+    fig4.update_layout(xaxis_title='Avg Range (miles)', margin=dict(l=120, r=10, t=20, b=30))
 
     return fig1, fig2, fig3, fig4
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — Tab 3: Models & Range
+# TAB 3 — MODELS & RANGE
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
@@ -588,72 +645,90 @@ def tab_manufacturers(yr_range, ev_type, make):
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def tab_models(yr_range, ev_type, make):
-    d = _filter(yr_range, ev_type, make)
-    bev = d[(d['Type']=='BEV') & (d['Range']>0)]
+def cb_models(yr_range, ev_type, make):
+    d   = _filter(yr_range, ev_type, make)
+    bev = d[(d['Type'] == 'BEV') & (d['Range'] > 0)]
 
-    # 1. Range histogram
+    # Range histogram
+    med = bev['Range'].median() if len(bev) else 0
     fig1 = go.Figure(go.Histogram(
         x=bev['Range'], nbinsx=40,
-        marker=dict(color=BLUE, opacity=0.8, line=dict(color=BG, width=0.5)),
-        hovertemplate='Range %{x} mi: %{y:,} vehicles<extra></extra>',
+        marker=dict(color=BLUE, opacity=0.75, line=dict(color=BG, width=0.5)),
+        hovertemplate='%{x} mi: %{y:,} vehicles<extra></extra>',
     ))
-    fig1.update_layout(**_layout(height=290), showlegend=False)
-    fig1.update_layout(xaxis_title='Electric Range (miles)', yaxis_title='Count')
-    fig1.add_vline(x=bev['Range'].median(), line=dict(color=GREEN, dash='dash', width=1.5),
-                   annotation_text=f'Median: {bev["Range"].median():.0f} mi',
-                   annotation_font_color=GREEN, annotation_position='top right')
+    fig1.update_layout(**_chart(height=290), showlegend=False)
+    fig1.update_layout(xaxis_title='Electric Range (miles)', yaxis_title='Vehicles')
+    if med:
+        fig1.add_vline(
+            x=med, line=dict(color=AMBER, dash='dash', width=1.5),
+            annotation_text=f'Median  {med:.0f} mi',
+            annotation_font=dict(color=AMBER, size=11),
+            annotation_position='top right',
+        )
 
-    # 2. Avg range by year
-    ry = bev.groupby('Year')['Range'].agg(['mean','median']).reset_index()
+    # Avg range by year
+    ry  = bev.groupby('Year')['Range'].agg(['mean', 'median']).reset_index()
     fig2 = go.Figure()
-    fig2.add_trace(go.Scatter(x=ry.Year, y=ry['mean'], name='Mean',
-                              mode='lines+markers', line=dict(color=GREEN, width=2.5),
-                              marker=dict(size=6), hovertemplate='Mean %{x}: %{y:.0f} mi<extra></extra>'))
-    fig2.add_trace(go.Scatter(x=ry.Year, y=ry['median'], name='Median',
-                              mode='lines+markers', line=dict(color=BLUE, width=2, dash='dot'),
-                              marker=dict(size=6), hovertemplate='Median %{x}: %{y:.0f} mi<extra></extra>'))
-    fig2.update_layout(**_layout(height=290))
+    fig2.add_trace(go.Scatter(
+        x=ry.Year, y=ry['mean'], name='Mean',
+        mode='lines+markers', line=dict(color=BLUE, width=2.5),
+        marker=dict(size=6),
+        hovertemplate='Mean  %{x}: %{y:.0f} mi<extra></extra>',
+    ))
+    fig2.add_trace(go.Scatter(
+        x=ry.Year, y=ry['median'], name='Median',
+        mode='lines+markers', line=dict(color=AMBER, width=2, dash='dot'),
+        marker=dict(size=6),
+        hovertemplate='Median  %{x}: %{y:.0f} mi<extra></extra>',
+    ))
+    fig2.update_layout(**_chart(height=290))
     fig2.update_layout(yaxis_title='Range (miles)', hovermode='x unified')
 
-    # 3. Top 20 models by max range
-    top_range = (bev.groupby('Model')['Range'].max()
-                 .sort_values(ascending=False).head(20).reset_index().sort_values('Range'))
+    # Top 20 models by max range
+    top_r = (bev.groupby('Model')['Range'].max()
+             .sort_values(ascending=False).head(20).reset_index()
+             .sort_values('Range'))
     fig3 = go.Figure(go.Bar(
-        x=top_range.Range, y=top_range.Model, orientation='h',
-        marker=dict(color=PALETTE[:len(top_range)], opacity=0.85),
+        x=top_r.Range, y=top_r.Model, orientation='h',
+        marker=dict(color=PALETTE[:len(top_r)], opacity=0.85),
         hovertemplate='<b>%{y}</b>: %{x:.0f} mi<extra></extra>',
     ))
-    fig3.update_layout(**_layout(height=290), showlegend=False)
-    fig3.update_layout(xaxis_title='Max Rated Range (miles)', margin=dict(l=140,r=10,t=20,b=30))
+    fig3.update_layout(**_chart(height=290), showlegend=False)
+    fig3.update_layout(xaxis_title='Max Rated Range (miles)', margin=dict(l=140, r=10, t=20, b=30))
 
-    # 4. Scatter: count vs avg range for top 30 models
-    scatter_d = bev.groupby('Model').agg(Count=('Range','count'), Avg_Range=('Range','mean')).reset_index()
-    scatter_d = scatter_d[scatter_d.Count >= 50].nlargest(30, 'Count')
+    # Scatter: count vs avg range
+    sd = (bev.groupby('Model')
+          .agg(Count=('Range', 'count'), Avg_Range=('Range', 'mean'))
+          .reset_index())
+    sd = sd[sd.Count >= 50].nlargest(30, 'Count')
     fig4 = go.Figure(go.Scatter(
-        x=scatter_d.Avg_Range, y=scatter_d.Count,
+        x=sd.Avg_Range, y=sd.Count,
         mode='markers+text',
-        text=scatter_d.Model,
+        text=sd.Model,
         textfont=dict(size=9, color=MUTED),
         textposition='top center',
         marker=dict(
-            size=np.sqrt(scatter_d.Count / scatter_d.Count.max() * 2000) + 8,
-            color=scatter_d.Avg_Range, colorscale='viridis',
+            size=np.sqrt(sd.Count / sd.Count.max() * 2000) + 7,
+            color=sd.Avg_Range,
+            colorscale=[[0, _rgba(BLUE, 0.5)], [0.5, BLUE], [1.0, TEAL]],
             showscale=True,
-            colorbar=dict(title='Range', tickfont=dict(color=MUTED,size=10),
-                          bgcolor='rgba(0,0,0,0)', thickness=8, len=0.6),
-            opacity=0.75, line=dict(color=BG, width=1),
+            colorbar=dict(
+                title=dict(text='Range', font=dict(color=MUTED, size=10)),
+                tickfont=dict(color=MUTED, size=10),
+                bgcolor='rgba(0,0,0,0)', thickness=8, len=0.6,
+            ),
+            opacity=0.8, line=dict(color=BG, width=1),
         ),
-        hovertemplate='<b>%{text}</b><br>Avg: %{x:.0f} mi | Count: %{y:,}<extra></extra>',
+        hovertemplate='<b>%{text}</b><br>Avg: %{x:.0f} mi  |  Count: %{y:,}<extra></extra>',
     ))
-    fig4.update_layout(**_layout(height=290), showlegend=False)
+    fig4.update_layout(**_chart(height=290), showlegend=False)
     fig4.update_layout(xaxis_title='Avg Range (miles)', yaxis_title='Registrations')
 
     return fig1, fig2, fig3, fig4
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — Tab 4: Geography
+# TAB 4 — GEOGRAPHY
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
@@ -665,87 +740,92 @@ def tab_models(yr_range, ev_type, make):
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def tab_geography(yr_range, ev_type, make):
+def cb_geography(yr_range, ev_type, make):
     d = _filter(yr_range, ev_type, make)
 
-    # 1. County bubble map
+    # County bubble map
     county_ct = d['County'].value_counts().reset_index()
-    county_ct.columns = ['County','Count']
-    county_ct['lat'] = county_ct['County'].map(lambda c: WA_COUNTIES.get(c, (None,None))[0])
-    county_ct['lon'] = county_ct['County'].map(lambda c: WA_COUNTIES.get(c, (None,None))[1])
-    county_ct = county_ct.dropna(subset=['lat','lon'])
+    county_ct.columns = ['County', 'Count']
+    county_ct['lat'] = county_ct['County'].map(lambda c: WA_COUNTIES.get(c, (None, None))[0])
+    county_ct['lon'] = county_ct['County'].map(lambda c: WA_COUNTIES.get(c, (None, None))[1])
+    county_ct = county_ct.dropna(subset=['lat', 'lon'])
+    max_c = county_ct['Count'].max()
 
     fig1 = go.Figure(go.Scattergeo(
         lat=county_ct.lat, lon=county_ct.lon,
-        text=county_ct.County,
-        customdata=county_ct.Count,
+        text=county_ct.County, customdata=county_ct.Count,
         mode='markers+text', textfont=dict(size=9, color=TEXT),
         textposition='top center',
         marker=dict(
-            size=np.sqrt(county_ct.Count / county_ct.Count.max()) * 45 + 6,
-            color=county_ct.Count, colorscale=[[0,'#1f6feb'],[0.5,GREEN],[1.0,'#a7f3d0']],
-            opacity=0.75, line=dict(color=BG, width=0.5),
+            size=np.sqrt(county_ct.Count / max_c) * 42 + 5,
+            color=county_ct.Count,
+            colorscale=[[0, _rgba(BLUE, 0.3)], [0.5, BLUE], [1.0, TEAL]],
+            opacity=0.8, line=dict(color=BG, width=0.5),
             showscale=True,
-            colorbar=dict(title='EVs', tickfont=dict(color=MUTED,size=10),
-                          bgcolor='rgba(0,0,0,0)', thickness=8, len=0.6),
+            colorbar=dict(
+                title=dict(text='EVs', font=dict(color=MUTED, size=10)),
+                tickfont=dict(color=MUTED, size=10),
+                bgcolor='rgba(0,0,0,0)', thickness=8, len=0.6,
+            ),
         ),
         hovertemplate='<b>%{text} County</b><br>EVs: %{customdata:,}<extra></extra>',
     ))
-    fig1.update_layout(**_layout(height=340))
+    fig1.update_layout(**_chart(height=360))
     fig1.update_layout(
-        geo=dict(bgcolor='rgba(0,0,0,0)', showframe=False, showcoastlines=True,
-                 coastlinecolor=BORDER, showland=True, landcolor='#1c2333',
-                 showocean=True, oceancolor='#0d1117',
-                 showlakes=True, lakecolor='#0d1117',
-                 lonaxis=dict(range=[-125, -116]),
-                 lataxis=dict(range=[45.5, 49.5]),
-                 projection_type='mercator'),
-        margin=dict(l=0,r=0,t=10,b=0),
+        geo=dict(
+            bgcolor='rgba(0,0,0,0)', showframe=False, showcoastlines=True,
+            coastlinecolor=BORDER, showland=True, landcolor=CARD2,
+            showocean=True, oceancolor=BG, showlakes=True, lakecolor=BG,
+            lonaxis=dict(range=[-125, -116]), lataxis=dict(range=[45.5, 49.5]),
+            projection_type='mercator',
+        ),
+        margin=dict(l=0, r=0, t=10, b=0),
     )
 
-    # 2. Top 15 counties bar
-    top_c = county_ct.nlargest(15,'Count').sort_values('Count')
+    # Top 15 counties
+    top_c = county_ct.nlargest(15, 'Count').sort_values('Count')
     fig2 = go.Figure(go.Bar(
         x=top_c.Count, y=top_c.County, orientation='h',
         marker=dict(color=PALETTE[:len(top_c)], opacity=0.85),
         hovertemplate='<b>%{y}</b>: %{x:,}<extra></extra>',
     ))
-    fig2.update_layout(**_layout(height=340), showlegend=False)
-    fig2.update_layout(margin=dict(l=100,r=10,t=20,b=30))
+    fig2.update_layout(**_chart(height=360), showlegend=False)
+    fig2.update_layout(margin=dict(l=100, r=10, t=20, b=30))
 
-    # 3. Top 20 cities
+    # Top 20 cities
     city_ct = d['City'].value_counts().head(20).reset_index()
-    city_ct.columns = ['City','Count']
+    city_ct.columns = ['City', 'Count']
     city_ct = city_ct.sort_values('Count')
+    bar_c = [TEAL if i >= 17 else _rgba(TEAL, 0.4) for i in range(len(city_ct))]
     fig3 = go.Figure(go.Bar(
         x=city_ct.Count, y=city_ct.City, orientation='h',
-        marker=dict(color=[GREEN if i >= 17 else f'{GREEN}66' for i in range(len(city_ct))]),
+        marker=dict(color=bar_c),
         hovertemplate='<b>%{y}</b>: %{x:,}<extra></extra>',
     ))
-    fig3.update_layout(**_layout(height=340), showlegend=False)
-    fig3.update_layout(margin=dict(l=110,r=10,t=20,b=30))
+    fig3.update_layout(**_chart(height=360), showlegend=False)
+    fig3.update_layout(margin=dict(l=110, r=10, t=20, b=30))
 
-    # 4. Electric utility donut
-    # Clean utility names (strip pipe-separated extras)
-    util_clean = d['Utility'].dropna().str.split('||').str[0].str.strip()
-    util_ct = util_clean.value_counts().head(8)
-    other_u = util_clean.value_counts().iloc[8:].sum()
-    u_labels = list(util_ct.index) + (['Others'] if other_u > 0 else [])
-    u_values = list(util_ct.values) + ([other_u] if other_u > 0 else [])
+    # Electric utility donut
+    util = d['Utility'].dropna().str.split('||').str[0].str.strip()
+    uc   = util.value_counts()
+    top8 = uc.head(8)
+    oth  = uc.iloc[8:].sum()
+    u_l  = list(top8.index) + (['Others'] if oth > 0 else [])
+    u_v  = list(top8.values) + ([oth]      if oth > 0 else [])
     fig4 = go.Figure(go.Pie(
-        labels=u_labels, values=u_values, hole=0.45,
-        marker=dict(colors=PALETTE[:len(u_labels)], line=dict(color=BG, width=2)),
+        labels=u_l, values=u_v, hole=0.45,
+        marker=dict(colors=PALETTE[:len(u_l)], line=dict(color=BG, width=2)),
         textinfo='label+percent', textfont=dict(size=9, color=TEXT),
-        hovertemplate='<b>%{label}</b>: %{value:,} (%{percent})<extra></extra>',
+        hovertemplate='<b>%{label}</b>: %{value:,}  (%{percent})<extra></extra>',
     ))
-    fig4.update_layout(**_layout(height=340), showlegend=False)
-    fig4.update_layout(margin=dict(l=10,r=10,t=20,b=10))
+    fig4.update_layout(**_chart(height=360), showlegend=False)
+    fig4.update_layout(margin=dict(l=10, r=10, t=20, b=10))
 
     return fig1, fig2, fig3, fig4
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CALLBACKS — Tab 5: Global Context
+# TAB 5 — GLOBAL CONTEXT
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
@@ -757,42 +837,45 @@ def tab_geography(yr_range, ev_type, make):
     Input('type-filter', 'value'),
     Input('make-filter', 'value'),
 )
-def tab_global(yr_range, ev_type, make):
+def cb_global(yr_range, ev_type, make):
     yr0, yr1 = yr_range
-    gl = df_global[(df_global.Year >= yr0) & (df_global.Year <= yr1)]
+    gl  = df_global[(df_global.Year >= yr0) & (df_global.Year <= yr1)]
     bat = df_battery
 
-    # 1. Global sales stacked area by region
-    reg_trend = gl.groupby(['Year','Region'])['Total'].sum().reset_index()
-    region_order = ['Asia-Pacific','Europe','Americas','Rest of World']
-    clrs = {'Asia-Pacific':GREEN,'Europe':BLUE,'Americas':AMBER,'Rest of World':PURPLE}
+    # Global sales stacked area
+    reg_trend   = gl.groupby(['Year', 'Region'])['Total'].sum().reset_index()
+    region_order = ['Asia-Pacific', 'Europe', 'Americas', 'Rest of World']
+    reg_colors   = {'Asia-Pacific': BLUE, 'Europe': TEAL, 'Americas': AMBER, 'Rest of World': PURPLE}
     fig1 = go.Figure()
     for reg in region_order:
-        s = reg_trend[reg_trend.Region==reg]
-        if s.empty: continue
+        s = reg_trend[reg_trend.Region == reg]
+        if s.empty:
+            continue
         fig1.add_trace(go.Scatter(
             x=s.Year, y=s.Total, name=reg, stackgroup='one', mode='lines',
-            fill='tonexty', line=dict(color=clrs.get(reg,MUTED), width=1.5),
-            hovertemplate=f'<b>{reg}</b> %{{x}}: %{{y:.2f}}M<extra></extra>',
+            fill='tonexty', line=dict(color=reg_colors.get(reg, MUTED), width=1.5),
+            hovertemplate=f'<b>{reg}</b>  %{{x}}: %{{y:.2f}}M<extra></extra>',
         ))
-    fig1.update_layout(**_layout(height=310))
+    fig1.update_layout(**_chart(height=310))
     fig1.update_layout(yaxis_title='Sales (M units)', hovermode='x unified')
 
-    # 2. Battery cost
+    # Battery cost
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
         x=bat.Year, y=bat.Cost_kWh, mode='lines+markers',
-        line=dict(color=PURPLE, width=3), marker=dict(size=7, color=PURPLE),
-        fill='tozeroy', fillcolor=f'{PURPLE}18',
+        line=dict(color=PURPLE, width=2.5), marker=dict(size=6, color=PURPLE),
         hovertemplate='%{x}: <b>$%{y}</b>/kWh<extra></extra>',
     ))
-    fig2.add_hline(y=100, line=dict(color=GREEN, dash='dash', width=1.5),
-                   annotation_text='$100 target', annotation_font_color=GREEN,
-                   annotation_position='bottom right')
-    fig2.update_layout(**_layout(height=310), showlegend=False)
+    fig2.add_hline(
+        y=100, line=dict(color=GREEN, dash='dash', width=1.5),
+        annotation_text='$100 target',
+        annotation_font=dict(color=GREEN, size=11),
+        annotation_position='bottom right',
+    )
+    fig2.update_layout(**_chart(height=310), showlegend=False)
     fig2.update_layout(yaxis_title='Battery Cost ($/kWh)')
 
-    # 3. Top countries bar
+    # Top countries bar
     ctry = gl.groupby('Country')['Total'].sum().sort_values(ascending=False).head(10).reset_index()
     ctry = ctry.sort_values('Total')
     fig3 = go.Figure(go.Bar(
@@ -800,24 +883,23 @@ def tab_global(yr_range, ev_type, make):
         marker=dict(color=PALETTE[:len(ctry)], opacity=0.85),
         hovertemplate='<b>%{y}</b>: %{x:.2f}M<extra></extra>',
     ))
-    fig3.update_layout(**_layout(height=310), showlegend=False)
-    fig3.update_layout(xaxis_title='Total Sales (M units)', margin=dict(l=120,r=10,t=20,b=30))
+    fig3.update_layout(**_chart(height=310), showlegend=False)
+    fig3.update_layout(xaxis_title='Total Sales (M units)', margin=dict(l=120, r=10, t=20, b=30))
 
-    # 4. WA vs global: WA fleet size vs US global sales (indexed to 2015)
-    d_wa = _filter(yr_range, ev_type, make)
-    wa_yr = d_wa.groupby('Year').size().reset_index(name='WA_Count')
-    us_gl = gl[gl.Country=='USA'][['Year','Total']].rename(columns={'Total':'US_Sales_M'})
+    # WA share of US market
+    d_wa   = _filter(yr_range, ev_type, make)
+    wa_yr  = d_wa.groupby('Year').size().reset_index(name='WA_Count')
+    us_gl  = gl[gl.Country == 'USA'][['Year', 'Total']].rename(columns={'Total': 'US_Sales_M'})
     merged = wa_yr.merge(us_gl, on='Year', how='inner')
-    merged['WA_Share_pct'] = merged.WA_Count / (merged.US_Sales_M * 1e6) * 100
+    merged['WA_pct'] = merged.WA_Count / (merged.US_Sales_M * 1e6) * 100
 
-    fig4 = go.Figure()
-    fig4.add_trace(go.Bar(
-        x=merged.Year, y=merged.WA_Share_pct, name='WA % of US EV Sales',
-        marker=dict(color=GREEN, opacity=0.8),
-        hovertemplate='%{x}: WA = <b>%{y:.1f}%</b> of US<extra></extra>',
+    fig4 = go.Figure(go.Bar(
+        x=merged.Year, y=merged.WA_pct,
+        marker=dict(color=BLUE, opacity=0.85),
+        hovertemplate='%{x}: WA = <b>%{y:.1f}%</b> of US sales<extra></extra>',
     ))
-    fig4.update_layout(**_layout(height=310))
-    fig4.update_layout(yaxis_title='WA Share of US EV Market (%)')
+    fig4.update_layout(**_chart(height=310), showlegend=False)
+    fig4.update_layout(yaxis_title='WA Share of US EV Market (%)', bargap=0.35)
 
     return fig1, fig2, fig3, fig4
 
