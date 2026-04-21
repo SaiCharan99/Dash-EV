@@ -1,9 +1,3 @@
-"""
-EV Energy Sector Dashboard
-Real data: Washington State EV Population (data.wa.gov) — 280 k+ registrations
-Global context: IEA Global EV Outlook 2015-2024
-"""
-
 import os
 import dash
 from dash import dcc, html, Input, Output
@@ -11,43 +5,33 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DESIGN TOKENS — Apple-inspired light system
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Backgrounds
-BG       = '#F5F5F7'   # systemGroupedBackground
+BG       = '#F5F5F7'
 PANEL    = '#FFFFFF'
-BG2      = '#F2F2F7'   # inset secondary fill
+BG2      = '#F2F2F7'
 
-# Text — WCAG AA compliant
-TEXT      = '#1C1C1E'   # 15.8:1 on white
-SECONDARY = '#48484A'   # 9.7:1
-MUTED     = '#6C6C70'   # 5.9:1
-SUBTLE    = '#8E8E93'   # 4.6:1
+TEXT      = '#1C1C1E'
+SECONDARY = '#48484A'
+MUTED     = '#6C6C70'
+SUBTLE    = '#8E8E93'
 
-# Separator
 SEP      = '#E5E5EA'
 
-# Apple System Colors (accessible, distinct)
 BLUE   = '#007AFF'
 GREEN  = '#34C759'
 ORANGE = '#FF9500'
 RED    = '#FF3B30'
 PURPLE = '#AF52DE'
-PINK   = '#FF2D55'
 TEAL   = '#32ADE6'
-INDIGO = '#5856D6'
-YELLOW = '#FFCC00'
-BROWN  = '#A2845E'
 
 NAV_BG   = '#1C1C1E'
 NAV_TEXT = '#F5F5F7'
 NAV_MUTE = '#8E8E93'
 
-# Chart colour sequence — 10 clearly distinct values
-PALETTE = [BLUE, ORANGE, GREEN, PURPLE, RED, TEAL, PINK, INDIGO, YELLOW, BROWN,
-           '#30B0C7', '#BF5AF2', '#FF6B00', '#30D158', '#0A84FF']
+PALETTE = [
+    BLUE, ORANGE, GREEN, PURPLE, RED, TEAL,
+    '#FF2D55', '#5856D6', '#FFCC00', '#A2845E',
+    '#30B0C7', '#BF5AF2', '#FF6B00', '#30D158', '#0A84FF',
+]
 
 
 def _rgba(hex_color: str, alpha: float) -> str:
@@ -55,8 +39,6 @@ def _rgba(hex_color: str, alpha: float) -> str:
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return f'rgba({r},{g},{b},{alpha})'
 
-
-# ── Chart base layout (light, clean, accessible) ────────────────────────────
 
 def _chart(height=320):
     return dict(
@@ -88,10 +70,6 @@ def _chart(height=320):
         ),
     )
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# DATA — WASHINGTON STATE
-# ══════════════════════════════════════════════════════════════════════════════
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'ev_population.csv')
 
@@ -130,8 +108,6 @@ WA_COUNTIES = {
     'Whatcom':(48.84,-122.11),'Whitman':(46.90,-117.40),'Yakima':(46.65,-120.45),
 }
 
-# ── Global context (IEA) ─────────────────────────────────────────────────────
-
 GLOBAL_YEARS = list(range(2015, 2025))
 GLOBAL_REGIONS = {
     'Asia-Pacific': ['China','Japan','South Korea','India'],
@@ -169,12 +145,8 @@ df_global = pd.DataFrame([
     for y, v in zip(GLOBAL_YEARS, vs)
 ])
 
-# ══════════════════════════════════════════════════════════════════════════════
-# LAYOUT COMPONENTS
-# ══════════════════════════════════════════════════════════════════════════════
 
 def _panel(children, flex=1, extra=None):
-    """White card with Apple-style shadow — no border."""
     s = {
         'background': PANEL,
         'borderRadius': '16px',
@@ -189,7 +161,6 @@ def _panel(children, flex=1, extra=None):
 
 
 def _ph(title, subtitle=''):
-    """Panel header with generous padding."""
     return html.Div([
         html.Div(title, style={
             'fontSize': '15px', 'fontWeight': '600', 'color': TEXT,
@@ -208,9 +179,7 @@ def _row(*children, gap='16px', mb='16px'):
                     className='ev-row')
 
 
-
 def _legend_row(items):
-    """Accessible horizontal legend: coloured dot + label + percentage."""
     return html.Div([
         html.Div([
             html.Div(style={
@@ -264,10 +233,6 @@ def _pill_label(text):
     })
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# APP
-# ══════════════════════════════════════════════════════════════════════════════
-
 app = dash.Dash(__name__, suppress_callback_exceptions=True, title='EV Dashboard')
 server = app.server
 
@@ -292,7 +257,6 @@ def _tss():
 
 app.layout = html.Div([
 
-    # ══ Navigation ═══════════════════════════════════════════════════════════
     html.Div([
         html.Div([
             html.Span('EV', style={'fontWeight': '800', 'color': NAV_TEXT, 'fontSize': '14px',
@@ -320,10 +284,8 @@ app.layout = html.Div([
         'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '52px',
     }),
 
-    # ══ Page Body ═════════════════════════════════════════════════════════════
     html.Div([
 
-        # Page title
         html.Div([
             html.H1('EV Market Intelligence', style={
                 'fontSize': '28px', 'fontWeight': '700', 'color': TEXT,
@@ -333,7 +295,6 @@ app.layout = html.Div([
                    style={'fontSize': '13px', 'color': MUTED, 'marginTop': '5px'}),
         ], style={'padding': '32px 32px 0'}),
 
-        # Filter bar
         html.Div([
             html.Div([
                 _pill_label('Model Year'),
@@ -374,7 +335,6 @@ app.layout = html.Div([
             'flexWrap': 'wrap',
         }),
 
-        # KPI row
         html.Div([
             _kpi('Total Registered EVs',   'kpi-total', 'kpi-total-d', BLUE),
             _kpi('Battery Electric (BEV)', 'kpi-bev',   'kpi-bev-d',   GREEN),
@@ -382,7 +342,6 @@ app.layout = html.Div([
             _kpi('Market Leader',          'kpi-top',   'kpi-top-d',   PURPLE),
         ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 32px 0', 'flexWrap': 'wrap'}),
 
-        # Tab content
         html.Div(id='tab-content'),
 
     ], style={'background': BG, 'minHeight': 'calc(100vh - 52px)'}),
@@ -397,13 +356,9 @@ app.layout = html.Div([
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TAB ROUTER
-# ══════════════════════════════════════════════════════════════════════════════
-
 @app.callback(Output('tab-content', 'children'), Input('main-tabs', 'value'))
 def render_tab(tab):
-    P = '20px 32px 32px'  # standard page padding
+    P = '20px 32px 32px'
 
     if tab == 'overview':
         return html.Div([
@@ -546,10 +501,6 @@ def render_tab(tab):
         ], style={'padding': P})
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
-
 def _filter(yr_range, ev_type, make):
     yr0, yr1 = yr_range
     d = DF[(DF['Year'] >= yr0) & (DF['Year'] <= yr1)]
@@ -562,7 +513,6 @@ def _filter(yr_range, ev_type, make):
 
 def _bar_h(x_vals, y_vals, color, hover_tmpl):
     n = len(y_vals)
-    # Gradient: full opacity for top 3, lighter for the rest
     threshold = max(n - 3, 0)
     colors = [color if i >= threshold else _rgba(color, 0.38) for i in range(n)]
     return go.Bar(
@@ -571,10 +521,6 @@ def _bar_h(x_vals, y_vals, color, hover_tmpl):
         hovertemplate=hover_tmpl,
     )
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# KPIs
-# ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
     Output('kpi-total',  'children'), Output('kpi-total-d', 'children'),
@@ -610,10 +556,6 @@ def cb_kpis(yr_range, ev_type, make):
     )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# FLEET OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
-
 @app.callback(
     Output('ov-year-bar',   'figure'),
     Output('ov-type-pie',   'figure'),
@@ -626,7 +568,6 @@ def cb_overview(yr_range, ev_type, make):
     d = _filter(yr_range, ev_type, make)
     yr_type = d.groupby(['Year', 'Type']).size().reset_index(name='Count')
 
-    # Bar: registrations by year
     fig1 = go.Figure()
     for t, color in [('BEV', BLUE), ('PHEV', ORANGE)]:
         sub = yr_type[yr_type.Type == t]
@@ -637,14 +578,12 @@ def cb_overview(yr_range, ev_type, make):
     fig1.update_layout(**_chart(height=300), barmode='stack')
     fig1.update_layout(yaxis_title='Registrations', bargap=0.32, margin=dict(l=8,r=8,t=8,b=40))
 
-    # Donut: BEV vs PHEV — NO inside labels; clean external legend
-    tc = d['Type'].value_counts()
+    tc    = d['Type'].value_counts()
     total = len(d)
-    colors_d = [BLUE, ORANGE]
-    fig2 = go.Figure(go.Pie(
+    fig2  = go.Figure(go.Pie(
         labels=tc.index, values=tc.values, hole=0.68,
-        marker=dict(colors=colors_d[:len(tc)], line=dict(color=PANEL, width=4)),
-        textinfo='none',  # No labels inside the donut
+        marker=dict(colors=[BLUE, ORANGE][:len(tc)], line=dict(color=PANEL, width=4)),
+        textinfo='none',
         hovertemplate='<b>%{label}</b>: %{value:,}  (%{percent})<extra></extra>',
     ))
     fig2.update_layout(**_chart(height=220), showlegend=False)
@@ -657,16 +596,13 @@ def cb_overview(yr_range, ev_type, make):
             align='center',
         )],
     )
-    # Custom accessible legend
-    items_2 = [
+    legend_2 = _legend_row([
         (BLUE,   'Battery Electric (BEV)',
          f'{tc.get("BEV",0):,}  ·  {tc.get("BEV",0)/total*100:.1f}%' if total else '—'),
         (ORANGE, 'Plug-in Hybrid (PHEV)',
          f'{tc.get("PHEV",0):,}  ·  {tc.get("PHEV",0)/total*100:.1f}%' if total else '—'),
-    ]
-    legend_2 = _legend_row([(c, l, p) for c, l, p in items_2])
+    ])
 
-    # Bar: top makes
     mc = d['Make'].value_counts().head(15).reset_index()
     mc.columns = ['Make', 'Count']
     mc = mc.sort_values('Count')
@@ -675,7 +611,6 @@ def cb_overview(yr_range, ev_type, make):
     fig3.update_layout(**_chart(height=300), showlegend=False)
     fig3.update_layout(margin=dict(l=110, r=12, t=8, b=36))
 
-    # Bar: top models
     model_ct = d['Model'].value_counts().head(15).reset_index()
     model_ct.columns = ['Model', 'Count']
     model_ct = model_ct.sort_values('Count')
@@ -686,10 +621,6 @@ def cb_overview(yr_range, ev_type, make):
 
     return fig1, fig2, legend_2, fig3, fig4
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# MANUFACTURERS
-# ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
     Output('mf-pie',        'figure'),
@@ -709,7 +640,6 @@ def cb_manufacturers(yr_range, ev_type, make):
     labels = list(top10.index) + (['Others'] if other > 0 else [])
     values = list(top10.values) + ([other]   if other > 0 else [])
 
-    # Donut — no inside labels, accessible external legend
     fig1 = go.Figure(go.Pie(
         labels=labels, values=values, hole=0.60,
         marker=dict(colors=PALETTE[:len(labels)], line=dict(color=PANEL, width=3)),
@@ -719,14 +649,11 @@ def cb_manufacturers(yr_range, ev_type, make):
     fig1.update_layout(**_chart(height=240), showlegend=False)
     fig1.update_layout(margin=dict(l=20, r=20, t=20, b=4))
 
-    # Legend below
-    legend_items = [
+    legend_1 = _legend_row([
         (PALETTE[i], lbl, f'{v:,}  ·  {v/total*100:.1f}%' if total else '—')
         for i, (lbl, v) in enumerate(zip(labels, values))
-    ]
-    legend_1 = _legend_row(legend_items)
+    ])
 
-    # Stacked bar: BEV vs PHEV by make
     top12 = mc.head(12).index.tolist()
     sub   = d[d['Make'].isin(top12)]
     mt    = sub.groupby(['Make', 'Type']).size().reset_index(name='Count')
@@ -743,7 +670,6 @@ def cb_manufacturers(yr_range, ev_type, make):
     fig2.update_layout(**_chart(height=340), barmode='stack')
     fig2.update_layout(margin=dict(l=108, r=12, t=28, b=36))
 
-    # Line: trend top 6 makes
     top6  = mc.head(6).index.tolist()
     trend = d[d['Make'].isin(top6)].groupby(['Year', 'Make']).size().reset_index(name='Count')
     fig3  = go.Figure()
@@ -758,7 +684,6 @@ def cb_manufacturers(yr_range, ev_type, make):
     fig3.update_layout(**_chart(height=340))
     fig3.update_layout(yaxis_title='Registrations', hovermode='x unified')
 
-    # Bar: avg range by make (BEV)
     bev_d = d[(d['Type'] == 'BEV') & (d['Range'] > 0)]
     rng   = bev_d.groupby('Make')['Range'].mean().sort_values(ascending=False).head(15)
     rng   = rng.sort_values()
@@ -769,10 +694,6 @@ def cb_manufacturers(yr_range, ev_type, make):
 
     return fig1, legend_1, fig2, fig3, fig4
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# MODELS & RANGE
-# ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
     Output('md-hist',       'figure'),
@@ -855,10 +776,6 @@ def cb_models(yr_range, ev_type, make):
 
     return fig1, fig2, fig3, fig4
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# GEOGRAPHY
-# ══════════════════════════════════════════════════════════════════════════════
 
 @app.callback(
     Output('geo-map',           'figure'),
@@ -953,10 +870,6 @@ def cb_geography(yr_range, ev_type, make):
     return fig1, fig2, fig3, fig4, legend_u
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# GLOBAL CONTEXT
-# ══════════════════════════════════════════════════════════════════════════════
-
 @app.callback(
     Output('gl-sales',        'figure'),
     Output('gl-battery',      'figure'),
@@ -966,8 +879,7 @@ def cb_geography(yr_range, ev_type, make):
 )
 def cb_global(yr_range, ev_type, make):
     yr0, yr1 = yr_range
-    gl  = df_global[(df_global.Year >= yr0) & (df_global.Year <= yr1)]
-    bat = df_battery
+    gl = df_global[(df_global.Year >= yr0) & (df_global.Year <= yr1)]
 
     region_order = ['Asia-Pacific', 'Europe', 'Americas', 'Rest of World']
     reg_colors   = {'Asia-Pacific': BLUE, 'Europe': GREEN, 'Americas': ORANGE, 'Rest of World': PURPLE}
@@ -988,7 +900,7 @@ def cb_global(yr_range, ev_type, make):
 
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(
-        x=bat.Year, y=bat.Cost_kWh, mode='lines+markers',
+        x=df_battery.Year, y=df_battery.Cost_kWh, mode='lines+markers',
         line=dict(color=PURPLE, width=2.5),
         marker=dict(size=7, color=PANEL, line=dict(color=PURPLE, width=2.5)),
         hovertemplate='%{x}: <b>$%{y}</b>/kWh<extra></extra>',
@@ -1026,10 +938,6 @@ def cb_global(yr_range, ev_type, make):
 
     return fig1, fig2, fig3, fig4
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# RUN
-# ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
     app.run(debug=True, port=8050)
