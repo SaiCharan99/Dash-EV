@@ -1,0 +1,23 @@
+# large data files tracked via download_data.py
+data/ev_population.csv
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.env
+.venv
+venv/
+env/
+ENV/
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
