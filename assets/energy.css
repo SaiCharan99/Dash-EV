@@ -1,0 +1,9 @@
+/* Product 2 — Australian Energy Transition */
+
+/* Responsive row for energy dashboard panels */
+@media (max-width: 1100px) {
+  .en-row { flex-direction: column !important; }
+}
+
+/* Radar chart polar grid styling */
+.polar-grid .angularaxis line { stroke: #E5E5EA; }

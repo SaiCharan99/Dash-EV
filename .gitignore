@@ -1,6 +1,7 @@
-# large data files tracked via download_data.py
+# data files
 data/ev_population.csv
-
+data/energy/raw/
+data/energy/
 __pycache__/
 *.py[cod]
 *.pyo
