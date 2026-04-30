@@ -1,23 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap");
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:      #F5F5F7;
-  --panel:   #FFFFFF;
-  --sep:     rgba(60,60,67,0.13);
-  --text:    #1C1C1E;
-  --muted:   #6C6C70;
-  --subtle:  #8E8E93;
-  --blue:    #007AFF;
-  --shadow:  0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
-  --shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-html { font-size: 16px; scroll-behavior: smooth; }
+/* ─── lightning bolt cursor — /assets/lightning.svg ────────────── */
+/* Gold fill + dark amber edge + cream inner highlight (3D effect)  */
+/* html+body anchors the cursor through Dash re-renders;            */
+/* Plotly drag/interaction class names need explicit overrides       */
+/* because class selectors (0,1,0) beat * (0,0,0) at equal weight.  */
+html,
+body,
+* {
+  cursor: url("/assets/lightning.svg") 7 0, auto !important;
+}
+
+input,
+textarea,
+[contenteditable] {
+  cursor: url("/assets/lightning.svg") 7 0, text !important;
+}
+
+/* Plotly interaction overlay elements */
+.nsewdrag,
+.nsdrag,
+.ewdrag,
+.nedrag,
+.nwdrag,
+.sedrag,
+.swdrag,
+.drag,
+.js-plotly-plot .plotly .cursor-crosshair,
+.js-plotly-plot .plotly .cursor-move,
+.js-plotly-plot .plotly .cursor-pointer,
+.js-plotly-plot,
+.plotly,
+.plot-container {
+  cursor: url("/assets/lightning.svg") 7 0, auto !important;
+}
+
+:root {
+  --bg: #f5f5f7;
+  --panel: #ffffff;
+  --sep: rgba(60, 60, 67, 0.13);
+  --text: #1c1c1e;
+  --muted: #6c6c70;
+  --subtle: #8e8e93;
+  --blue: #007aff;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.06), 0 12px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -26,10 +73,20 @@ body {
 }
 
 /* ─── scrollbar ────────────────────────────────────────────────── */
-::-webkit-scrollbar              { width: 5px; height: 5px; }
-::-webkit-scrollbar-track        { background: transparent; }
-::-webkit-scrollbar-thumb        { background: rgba(0,0,0,0.14); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover  { background: rgba(0,0,0,0.22); }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
 
 /* ─── card panels ──────────────────────────────────────────────── */
 .dash-card {
@@ -46,31 +103,53 @@ body {
   cursor: pointer;
 }
 .landing-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 20px 60px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.05) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 20px 60px rgba(0, 0, 0, 0.13),
+    0 0 0 1px rgba(0, 0, 0, 0.05) !important;
   transform: translateY(-5px) !important;
 }
 
 /* ─── range slider ─────────────────────────────────────────────── */
-.rc-slider-track  { background: #007AFF !important; height: 3px !important; border-radius: 3px !important; }
-.rc-slider-rail   { background: rgba(60,60,67,0.15) !important; height: 3px !important; border-radius: 3px !important; }
+.rc-slider-track {
+  background: #007aff !important;
+  height: 3px !important;
+  border-radius: 3px !important;
+}
+.rc-slider-rail {
+  background: rgba(60, 60, 67, 0.15) !important;
+  height: 3px !important;
+  border-radius: 3px !important;
+}
 .rc-slider-handle {
-  border: 2px solid #007AFF !important;
+  border: 2px solid #007aff !important;
   background: #fff !important;
-  width: 18px !important; height: 18px !important; margin-top: -8px !important;
-  box-shadow: 0 2px 8px rgba(0,122,255,0.22) !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-top: -8px !important;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22) !important;
   transition: box-shadow 0.15s !important;
 }
 .rc-slider-handle:hover,
-.rc-slider-handle:focus  { box-shadow: 0 2px 14px rgba(0,122,255,0.45) !important; outline: none !important; }
-.rc-slider-mark-text     { color: #8E8E93 !important; font-size: 10px !important; font-family: Inter, sans-serif; }
+.rc-slider-handle:focus {
+  box-shadow: 0 2px 14px rgba(0, 122, 255, 0.45) !important;
+  outline: none !important;
+}
+.rc-slider-mark-text {
+  color: #8e8e93 !important;
+  font-size: 10px !important;
+  font-family: Inter, sans-serif;
+}
 
 /* ─── tabs  (strip Dash chrome) ────────────────────────────────── */
-.dash-tabs, .dash-tabs-content { border: none !important; background: transparent !important; }
+.dash-tabs,
+.dash-tabs-content {
+  border: none !important;
+  background: transparent !important;
+}
 
 /* ─── segmented radio control ──────────────────────────────────── */
 .seg-control {
   display: inline-flex;
-  background: rgba(120,120,128,0.12);
+  background: rgba(120, 120, 128, 0.12);
   border-radius: 9px;
   padding: 2px;
   gap: 1px;
@@ -83,7 +162,7 @@ body {
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  color: #6C6C70;
+  color: #6c6c70;
   transition: background 0.15s, color 0.15s, box-shadow 0.15s;
   white-space: nowrap;
   user-select: none;
@@ -91,64 +170,100 @@ body {
 }
 .seg-control label:has(input[type="radio"]:checked) {
   background: #ffffff;
-  color: #1C1C1E;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.13), 0 0 0 0.5px rgba(0,0,0,0.07);
+  color: #1c1c1e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.13), 0 0 0 0.5px rgba(0, 0, 0, 0.07);
   font-weight: 600;
 }
-.seg-control input[type="radio"] { display: none !important; }
+.seg-control input[type="radio"] {
+  display: none !important;
+}
 
 /* ─── dropdown ──────────────────────────────────────────────────── */
 .Select-control {
   background: #fff !important;
-  border: 1px solid rgba(60,60,67,0.18) !important;
+  border: 1px solid rgba(60, 60, 67, 0.18) !important;
   border-radius: 9px !important;
-  color: #1C1C1E !important;
+  color: #1c1c1e !important;
   min-height: 36px !important;
   font-size: 13px !important;
   font-family: Inter, sans-serif !important;
   transition: border-color 0.15s, box-shadow 0.15s !important;
   box-shadow: none !important;
 }
-.Select-control:hover     { border-color: rgba(60,60,67,0.28) !important; }
+.Select-control:hover {
+  border-color: rgba(60, 60, 67, 0.28) !important;
+}
 .is-open > .Select-control {
-  border-color: #007AFF !important;
-  box-shadow: 0 0 0 3px rgba(0,122,255,0.13) !important;
+  border-color: #007aff !important;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.13) !important;
 }
 .Select-menu-outer {
-  background: rgba(255,255,255,0.97) !important;
-  border: 1px solid rgba(60,60,67,0.12) !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(60, 60, 67, 0.12) !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.03) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.03) !important;
   margin-top: 6px !important;
   overflow: hidden !important;
 }
-.Select-option                { color: #1C1C1E !important; font-size: 13px; padding: 9px 14px; }
+.Select-option {
+  color: #1c1c1e !important;
+  font-size: 13px;
+  padding: 9px 14px;
+}
 .Select-option:hover,
-.Select-option.is-focused     { background: #F5F5F7 !important; }
-.Select-option.is-selected    { background: rgba(0,122,255,0.09) !important; color: #007AFF !important; font-weight: 500; }
-.Select-value-label           { color: #1C1C1E !important; font-size: 13px !important; }
-.Select-placeholder           { color: #8E8E93 !important; font-size: 13px; }
-.Select-arrow                 { border-top-color: #AEAEB2 !important; }
+.Select-option.is-focused {
+  background: #f5f5f7 !important;
+}
+.Select-option.is-selected {
+  background: rgba(0, 122, 255, 0.09) !important;
+  color: #007aff !important;
+  font-weight: 500;
+}
+.Select-value-label {
+  color: #1c1c1e !important;
+  font-size: 13px !important;
+}
+.Select-placeholder {
+  color: #8e8e93 !important;
+  font-size: 13px;
+}
+.Select-arrow {
+  border-top-color: #aeaeb2 !important;
+}
 
 /* multi-value pills */
 .Select--multi .Select-value {
-  background: rgba(0,122,255,0.09) !important;
-  border: 1px solid rgba(0,122,255,0.18) !important;
+  background: rgba(0, 122, 255, 0.09) !important;
+  border: 1px solid rgba(0, 122, 255, 0.18) !important;
   border-radius: 6px !important;
-  color: #007AFF !important;
+  color: #007aff !important;
   font-size: 12px !important;
   margin: 2px !important;
 }
-.Select--multi .Select-value-icon { border-right: 1px solid rgba(0,122,255,0.18) !important; color: #007AFF !important; }
-.Select--multi .Select-value-icon:hover { background: rgba(0,122,255,0.15) !important; }
+.Select--multi .Select-value-icon {
+  border-right: 1px solid rgba(0, 122, 255, 0.18) !important;
+  color: #007aff !important;
+}
+.Select--multi .Select-value-icon:hover {
+  background: rgba(0, 122, 255, 0.15) !important;
+}
 
 /* ─── Plotly modebar ───────────────────────────────────────────── */
-.modebar { display: none !important; }
+.modebar {
+  display: none !important;
+}
 
 /* ─── responsive ───────────────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .ev-row, .en-row { flex-direction: column !important; }
+  .ev-row,
+  .en-row {
+    flex-direction: column !important;
+  }
 }
 @media (max-width: 760px) {
-  .filter-bar { flex-direction: column !important; gap: 12px !important; }
+  .filter-bar {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
 }
