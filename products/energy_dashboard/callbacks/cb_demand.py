@@ -38,7 +38,8 @@ def _compute_demand(yr_range, regions, season):
 
     # ── Box plot: seasonal distribution ──────────────────────────────────────
     season_filter = None if season == 'All' else season.lower()
-    d_box = filter_demand(regions_list, list(yr_range), season_filter) or d
+    _d_box = filter_demand(regions_list, list(yr_range), season_filter)
+    d_box = d if _d_box is None or _d_box.empty else _d_box
     fig2 = go.Figure()
     for i, s in enumerate(['summer', 'autumn', 'winter', 'spring']):
         sub = d_box[d_box.season == s]

@@ -6,6 +6,7 @@ from core.design_tokens import (
     BG, PANEL, TEXT, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, PURPLE, TEAL,
     NAV_BG, NAV_TEXT, NAV_MUTE,
+    CARD_BORDER, CARD_SHADOW,
 )
 from core.layout_helpers import _panel, _ph, _row, _pill_label
 
@@ -37,10 +38,10 @@ flask_cache.init_app(server, config={
 def _kpi_tile_style(accent):
     return {
         'background': PANEL,
-        'borderRadius': '16px',
-        'boxShadow': '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+        'borderRadius': '18px',
+        'border': f'1px solid {CARD_BORDER}',
+        'boxShadow': CARD_SHADOW,
         'padding': '22px 24px', 'flex': '1', 'minWidth': '150px',
-        'borderTop': f'3px solid {accent}',
     }
 
 
@@ -52,25 +53,30 @@ _YEAR_MARKS = {
 def _ts():
     return {
         'background': 'transparent', 'border': 'none',
-        'borderBottom': '2px solid transparent',
+        'borderBottom': '2.5px solid transparent',
         'color': NAV_MUTE, 'fontSize': '13px', 'fontWeight': '500',
-        'padding': '13px 18px', 'fontFamily': 'Inter, sans-serif',
+        'padding': '14px 16px', 'fontFamily': 'Inter, sans-serif',
+        'letterSpacing': '-0.1px',
     }
 
 def _tss():
     s = _ts()
-    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2px solid {GREEN}'})
+    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2.5px solid {GREEN}'})
     return s
 
 
 app.layout = html.Div([
 
+    # ── nav ───────────────────────────────────────────────────────────
     html.Div([
         html.Div([
-            html.Span('AU', style={'fontWeight': '800', 'color': NAV_TEXT, 'fontSize': '14px',
-                                   'letterSpacing': '-0.3px'}),
-            html.Span('  Energy Transition', style={'fontWeight': '400', 'color': NAV_MUTE,
-                                                    'fontSize': '14px'}),
+            html.Span('AU', style={
+                'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
+                'letterSpacing': '-0.3px',
+            }),
+            html.Span('  Energy Transition', style={
+                'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px',
+            }),
         ], style={'whiteSpace': 'nowrap'}),
 
         html.Div([
@@ -86,25 +92,32 @@ app.layout = html.Div([
 
         html.A('← Home', href='/', style={
             'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
-            'whiteSpace': 'nowrap',
+            'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
         }),
     ], style={
-        'background': NAV_BG, 'padding': '0 32px',
+        'background': 'rgba(28,28,30,0.88)',
+        'backdropFilter': 'blur(20px) saturate(180%)',
+        'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
+        'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
-        'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '52px',
+        'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '56px',
+        'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
     html.Div([
 
+        # ── page header ───────────────────────────────────────────────
         html.Div([
             html.H1('Australian Energy Transition', style={
-                'fontSize': '28px', 'fontWeight': '700', 'color': TEXT,
-                'letterSpacing': '-0.6px', 'margin': '0',
+                'fontSize': '32px', 'fontWeight': '800', 'color': TEXT,
+                'letterSpacing': '-0.8px', 'margin': '0', 'lineHeight': '1.1',
             }),
-            html.P('NEM Regions · 2015–2024 · Real AEMO Data via OpenElectricity',
-                   style={'fontSize': '13px', 'color': MUTED, 'marginTop': '5px'}),
-        ], style={'padding': '32px 32px 0'}),
+            html.P('NEM Regions · 2015–2024 · AEMO Data via OpenElectricity',
+                   style={'fontSize': '13px', 'color': MUTED, 'marginTop': '7px',
+                          'fontWeight': '400'}),
+        ], style={'padding': '36px 36px 0'}),
 
+        # ── filter bar ────────────────────────────────────────────────
         html.Div([
             html.Div([
                 _pill_label('Year Range'),
@@ -113,8 +126,10 @@ app.layout = html.Div([
                     marks=_YEAR_MARKS, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
                 ),
-            ], style={'flex': '3', 'minWidth': '220px'}),
+            ], style={'flex': '3', 'minWidth': '240px'}),
+
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+
             html.Div([
                 _pill_label('Regions'),
                 dcc.Dropdown(
@@ -124,47 +139,53 @@ app.layout = html.Div([
                     style={'minWidth': '220px'},
                 ),
             ], style={'flex': '2'}),
+
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+
             html.Div([
                 _pill_label('Season'),
                 dcc.RadioItems(
                     id='en-season-filter', value='All', inline=True,
-                    options=[{'label': f'  {s.capitalize()}', 'value': s.capitalize()}
+                    options=[{'label': s.capitalize(), 'value': s.capitalize()}
                              for s in ['All'] + SEASONS],
-                    inputStyle={'marginRight': '4px'},
-                    labelStyle={'marginRight': '14px', 'color': TEXT,
-                                'fontSize': '13px', 'cursor': 'pointer'},
+                    className='seg-control',
+                    inputStyle={}, labelStyle={},
                 ),
             ], style={'flex': '2'}),
         ], style={
-            'display': 'flex', 'alignItems': 'center', 'gap': '24px',
+            'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
-            'borderRadius': '16px',
-            'boxShadow': '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
-            'padding': '16px 24px',
-            'margin': '20px 32px 0',
+            'borderRadius': '18px',
+            'border': f'1px solid {CARD_BORDER}',
+            'boxShadow': CARD_SHADOW,
+            'padding': '18px 28px',
+            'margin': '24px 36px 0',
             'flexWrap': 'wrap',
-        }),
+        }, className='filter-bar'),
 
+        # ── KPI strip ─────────────────────────────────────────────────
         html.Div([
-            html.Div(id='en-kpi-total',    style=_kpi_tile_style(GREEN)),
-            html.Div(id='en-kpi-peak',     style=_kpi_tile_style(BLUE)),
-            html.Div(id='en-kpi-renew',    style=_kpi_tile_style(TEAL)),
-            html.Div(id='en-kpi-price',    style=_kpi_tile_style(ORANGE)),
-            html.Div(id='en-kpi-yoy',      style=_kpi_tile_style(PURPLE)),
-        ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 32px 0',
-                  'flexWrap': 'wrap'}),
+            html.Div(id='en-kpi-total', style=_kpi_tile_style(GREEN),  className='dash-card'),
+            html.Div(id='en-kpi-peak',  style=_kpi_tile_style(BLUE),   className='dash-card'),
+            html.Div(id='en-kpi-renew', style=_kpi_tile_style(TEAL),   className='dash-card'),
+            html.Div(id='en-kpi-price', style=_kpi_tile_style(ORANGE), className='dash-card'),
+            html.Div(id='en-kpi-yoy',   style=_kpi_tile_style(PURPLE), className='dash-card'),
+        ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 36px 0', 'flexWrap': 'wrap'}),
 
         html.Div(id='en-tab-content'),
 
-    ], style={'background': BG, 'minHeight': 'calc(100vh - 52px)'}),
+    ], style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
 
-    html.Div(
-        'AEMO · OpenElectricity · CSIRO GenCost 2024-25 · Dash & Plotly',
-        style={
-            'textAlign': 'center', 'padding': '18px', 'color': SUBTLE,
-            'fontSize': '11px', 'background': PANEL, 'borderTop': f'1px solid {SEP}',
-        }),
+    # ── footer ────────────────────────────────────────────────────────
+    html.Div([
+        html.Div(
+            'AEMO · OpenElectricity · CSIRO GenCost 2024-25 · Dash & Plotly',
+            style={'color': SUBTLE, 'fontSize': '11px'},
+        ),
+    ], style={
+        'textAlign': 'center', 'padding': '20px',
+        'background': PANEL, 'borderTop': f'1px solid {SEP}',
+    }),
 
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
 
@@ -181,7 +202,7 @@ _comparison.register(app)
 # Tab router
 @app.callback(Output('en-tab-content', 'children'), Input('en-main-tabs', 'value'))
 def render_tab(tab):
-    P = '20px 32px 32px'
+    P = '24px 36px 36px'
     cfg = {'displayModeBar': False}
 
     if tab == 'demand':

@@ -7,6 +7,7 @@ from core.design_tokens import (
     BG, BG2, PANEL, TEXT, SECONDARY, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, RED, PURPLE, TEAL, PALETTE,
     NAV_BG, NAV_TEXT, NAV_MUTE,
+    CARD_BORDER, CARD_SHADOW,
 )
 from core.chart_factory import _chart, _rgba, _bar_h
 from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label
@@ -33,24 +34,30 @@ _yr_marks = {
 def _ts():
     return {
         'background': 'transparent', 'border': 'none',
-        'borderBottom': '2px solid transparent',
+        'borderBottom': '2.5px solid transparent',
         'color': NAV_MUTE, 'fontSize': '13px', 'fontWeight': '500',
-        'padding': '13px 18px', 'fontFamily': 'Inter, sans-serif',
+        'padding': '14px 16px', 'fontFamily': 'Inter, sans-serif',
+        'letterSpacing': '-0.1px',
     }
 
 def _tss():
     s = _ts()
-    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2px solid {BLUE}'})
+    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2.5px solid {BLUE}'})
     return s
 
 
 app.layout = html.Div([
 
+    # ── nav ───────────────────────────────────────────────────────────
     html.Div([
         html.Div([
-            html.Span('EV', style={'fontWeight': '800', 'color': NAV_TEXT, 'fontSize': '14px',
-                                   'letterSpacing': '-0.3px'}),
-            html.Span('  Dashboard', style={'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px'}),
+            html.Span('EV', style={
+                'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
+                'letterSpacing': '-0.3px',
+            }),
+            html.Span('  Market Intelligence', style={
+                'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px',
+            }),
         ], style={'whiteSpace': 'nowrap'}),
 
         html.Div([
@@ -66,25 +73,34 @@ app.layout = html.Div([
 
         html.A('← Home', href='/', style={
             'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
-            'whiteSpace': 'nowrap',
+            'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
         }),
     ], style={
-        'background': NAV_BG, 'padding': '0 32px',
+        'background': 'rgba(28,28,30,0.88)',
+        'backdropFilter': 'blur(20px) saturate(180%)',
+        'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
+        'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
-        'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '52px',
+        'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '56px',
+        'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
     html.Div([
 
+        # ── page header ───────────────────────────────────────────────
         html.Div([
-            html.H1('EV Market Intelligence', style={
-                'fontSize': '28px', 'fontWeight': '700', 'color': TEXT,
-                'letterSpacing': '-0.6px', 'margin': '0',
-            }),
-            html.P('Washington State Department of Licensing · 280,000+ registered vehicles',
-                   style={'fontSize': '13px', 'color': MUTED, 'marginTop': '5px'}),
-        ], style={'padding': '32px 32px 0'}),
+            html.Div([
+                html.H1('EV Market Intelligence', style={
+                    'fontSize': '32px', 'fontWeight': '800', 'color': TEXT,
+                    'letterSpacing': '-0.8px', 'margin': '0', 'lineHeight': '1.1',
+                }),
+                html.P('Washington State Department of Licensing · 280,000+ registered vehicles',
+                       style={'fontSize': '13px', 'color': MUTED, 'marginTop': '7px',
+                              'fontWeight': '400'}),
+            ]),
+        ], style={'padding': '36px 36px 0'}),
 
+        # ── filter bar ────────────────────────────────────────────────
         html.Div([
             html.Div([
                 _pill_label('Model Year'),
@@ -93,62 +109,72 @@ app.layout = html.Div([
                     marks=_yr_marks, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
                 ),
-            ], style={'flex': '3', 'minWidth': '220px'}),
+            ], style={'flex': '3', 'minWidth': '240px'}),
+
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+
             html.Div([
                 _pill_label('EV Type'),
                 dcc.RadioItems(
                     id='type-filter', value='All', inline=True,
-                    options=[{'label': '  All', 'value': 'All'},
-                             {'label': '  BEV', 'value': 'BEV'},
-                             {'label': '  PHEV', 'value': 'PHEV'}],
-                    inputStyle={'marginRight': '4px'},
-                    labelStyle={'marginRight': '18px', 'color': TEXT, 'fontSize': '13px', 'cursor': 'pointer'},
+                    options=[{'label': 'All', 'value': 'All'},
+                             {'label': 'BEV', 'value': 'BEV'},
+                             {'label': 'PHEV', 'value': 'PHEV'}],
+                    className='seg-control',
+                    inputStyle={}, labelStyle={},
                 ),
             ], style={'flex': '1'}),
+
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+
             html.Div([
                 _pill_label('Make'),
                 dcc.Dropdown(
                     id='make-filter',
                     options=[{'label': m, 'value': m} for m in ALL_MAKES],
-                    value='All', clearable=False, style={'minWidth': '150px'},
+                    value='All', clearable=False, style={'minWidth': '160px'},
                 ),
             ], style={'flex': '1.2'}),
         ], style={
-            'display': 'flex', 'alignItems': 'center', 'gap': '24px',
+            'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
-            'borderRadius': '16px',
-            'boxShadow': '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
-            'padding': '16px 24px',
-            'margin': '20px 32px 0',
+            'borderRadius': '18px',
+            'border': f'1px solid {CARD_BORDER}',
+            'boxShadow': CARD_SHADOW,
+            'padding': '18px 28px',
+            'margin': '24px 36px 0',
             'flexWrap': 'wrap',
-        }),
+        }, className='filter-bar'),
 
+        # ── KPI strip ─────────────────────────────────────────────────
         html.Div([
-            _kpi('Total Registered EVs',   'kpi-total', 'kpi-total-d', BLUE),
+            _kpi('Total EVs',              'kpi-total', 'kpi-total-d', BLUE),
             _kpi('Battery Electric (BEV)', 'kpi-bev',   'kpi-bev-d',   GREEN),
             _kpi('Plug-in Hybrid (PHEV)',  'kpi-phev',  'kpi-phev-d',  ORANGE),
             _kpi('Market Leader',          'kpi-top',   'kpi-top-d',   PURPLE),
-        ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 32px 0', 'flexWrap': 'wrap'}),
+        ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 36px 0', 'flexWrap': 'wrap'}),
 
         html.Div(id='tab-content'),
 
-    ], style={'background': BG, 'minHeight': 'calc(100vh - 52px)'}),
+    ], style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
 
-    html.Div(
-        'EV Market Dashboard  ·  Washington State DOL  ·  IEA Global EV Outlook  ·  Dash & Plotly',
-        style={
-            'textAlign': 'center', 'padding': '18px', 'color': SUBTLE,
-            'fontSize': '11px', 'background': PANEL, 'borderTop': f'1px solid {SEP}',
-        }),
+    # ── footer ────────────────────────────────────────────────────────
+    html.Div([
+        html.Div(
+            'Washington State DOL  ·  IEA Global EV Outlook  ·  BloombergNEF  ·  Dash & Plotly',
+            style={'color': SUBTLE, 'fontSize': '11px'},
+        ),
+    ], style={
+        'textAlign': 'center', 'padding': '20px',
+        'background': PANEL, 'borderTop': f'1px solid {SEP}',
+    }),
 
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
 
 
 @app.callback(Output('tab-content', 'children'), Input('main-tabs', 'value'))
 def render_tab(tab):
-    P = '20px 32px 32px'
+    P = '24px 36px 36px'
 
     if tab == 'overview':
         return html.Div([

@@ -7,7 +7,9 @@ SECONDARY = '#48484A'
 MUTED     = '#6C6C70'
 SUBTLE    = '#8E8E93'
 
-SEP      = '#E5E5EA'
+SEP        = '#E5E5EA'
+CARD_BORDER = 'rgba(0,0,0,0.055)'
+CARD_SHADOW = '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)'
 
 BLUE   = '#007AFF'
 GREEN  = '#34C759'

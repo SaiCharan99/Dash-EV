@@ -14,29 +14,40 @@ def _chart(height=320):
     return dict(
         paper_bgcolor=PANEL,
         plot_bgcolor=PANEL,
-        font=dict(family='Inter, -apple-system, sans-serif', color=TEXT, size=13),
+        font=dict(family='Inter, -apple-system, sans-serif', color=TEXT, size=12),
         height=height,
-        margin=dict(l=8, r=8, t=8, b=40),
+        margin=dict(l=8, r=8, t=12, b=40),
         colorway=PALETTE,
         xaxis=dict(
-            gridcolor='#EBEBF0', linecolor=SEP, zeroline=False, showgrid=True,
-            tickfont=dict(color=MUTED, size=11), ticklen=0,
-            title_font=dict(color=SECONDARY, size=12),
+            gridcolor='rgba(60,60,67,0.08)',
+            linecolor='rgba(60,60,67,0.12)',
+            zeroline=False, showgrid=True,
+            tickfont=dict(color=MUTED, size=11),
+            ticklen=0,
+            title_font=dict(color=SECONDARY, size=11.5),
+            title_standoff=10,
         ),
         yaxis=dict(
-            gridcolor='#EBEBF0', linecolor=SEP, zeroline=False, showgrid=True,
-            tickfont=dict(color=MUTED, size=11), ticklen=0,
-            title_font=dict(color=SECONDARY, size=12),
+            gridcolor='rgba(60,60,67,0.08)',
+            linecolor='rgba(60,60,67,0.12)',
+            zeroline=False, showgrid=True,
+            tickfont=dict(color=MUTED, size=11),
+            ticklen=0,
+            title_font=dict(color=SECONDARY, size=11.5),
+            title_standoff=10,
         ),
         hoverlabel=dict(
-            bgcolor=PANEL, bordercolor=SEP,
-            font=dict(color=TEXT, size=13, family='Inter, sans-serif'),
+            bgcolor=PANEL,
+            bordercolor='rgba(60,60,67,0.15)',
+            font=dict(color=TEXT, size=12.5, family='Inter, sans-serif'),
+            namelength=-1,
         ),
         legend=dict(
-            font=dict(color=SECONDARY, size=12),
+            font=dict(color=SECONDARY, size=11.5),
             bgcolor='rgba(0,0,0,0)',
             orientation='h', yanchor='bottom', y=1.04, xanchor='right', x=1,
             itemsizing='constant', tracegroupgap=4,
+            itemclick='toggleothers',
         ),
     )
 
@@ -48,7 +59,8 @@ def _dual_axis_chart(height=320):
         gridcolor='rgba(0,0,0,0)',
         zeroline=False,
         tickfont=dict(color=MUTED, size=11), ticklen=0,
-        title_font=dict(color=SECONDARY, size=12),
+        title_font=dict(color=SECONDARY, size=11.5),
+        title_standoff=10,
     )
     return base
 
@@ -56,7 +68,7 @@ def _dual_axis_chart(height=320):
 def _bar_h(x_vals, y_vals, color, hover_tmpl):
     n = len(y_vals)
     threshold = max(n - 3, 0)
-    colors = [color if i >= threshold else _rgba(color, 0.38) for i in range(n)]
+    colors = [color if i >= threshold else _rgba(color, 0.36) for i in range(n)]
     return go.Bar(
         x=x_vals, y=y_vals, orientation='h',
         marker=dict(color=colors, line=dict(color='rgba(0,0,0,0)', width=0)),

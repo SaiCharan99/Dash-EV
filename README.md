@@ -301,6 +301,30 @@ def register(app):
 
 ---
 
+## Future: Alternatives to Plotly
+
+At current scale (monthly NEM data, ~600K rows) Plotly with caching is sufficient. The constraints that would force a change:
+
+- **JSON serialisation** blows up above ~10K points per figure (can hit 5–20 s)
+- **SVG rendering** degrades visibly past ~5K DOM nodes in the browser
+- **No true streaming** — full figure must be rebuilt and re-sent on every update
+
+| Library | Rendering | Python-native | Large data | Best for |
+|---|---|---|---|---|
+| **Plotly (current)** | SVG / WebGL opt-in | Yes | With `*gl` traces only | General dashboards + caching |
+| **Apache ECharts** | Canvas by default | Via pyecharts | Yes, natively | Real-time, high-volume; Sankey/treemap/geo |
+| **Bokeh** | Canvas / WebGL | Yes | Better than Plotly SVG | Streaming data; server-side downsampling |
+| **Altair** | SVG | Yes | No (hard cap ~5K rows) | Declarative EDA charts in notebooks |
+| **D3.js** | SVG / Canvas | No (JavaScript) | Yes (canvas mode) | Fully bespoke, JS-first teams |
+
+**ECharts** is the strongest long-term option — Canvas rendering, progressive loading, native streaming, and used in production by GitLab and OpenObserve as a direct Plotly replacement. Friction cost: it's JavaScript-only; Python integration via `pyecharts` or a custom Dash component.
+
+**Bokeh** is the best Python-native alternative — server-side rendering means data is aggregated before leaving the server, and it supports WebSocket push. Downside: lower-level API and slower community growth than Plotly.
+
+**Verdict:** ECharts if performance is critical and the team can write JS; Bokeh if staying Python-native with streaming; Plotly + caching for everything else at this scale.
+
+---
+
 ## Data Sources
 
 - **EV data** — Washington State Department of Licensing, [data.wa.gov](https://data.wa.gov)

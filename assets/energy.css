@@ -1,9 +1,14 @@
 /* Product 2 — Australian Energy Transition */
 
-/* Responsive row for energy dashboard panels */
 @media (max-width: 1100px) {
   .en-row { flex-direction: column !important; }
 }
 
-/* Radar chart polar grid styling */
-.polar-grid .angularaxis line { stroke: #E5E5EA; }
+/* KPI tile accent pip — small coloured bar at the bottom using data-accent attribute */
+.en-kpi-pip {
+  height: 2px;
+  width: 24px;
+  border-radius: 2px;
+  margin-top: 18px;
+  opacity: 0.65;
+}
