@@ -2,14 +2,20 @@
 
 A two-product data analytics platform built with Python, FastAPI, and Dash.
 
+<!-- Screenshot placeholder -->
+
+![Landing Page](screenshots/Landing.png)
+
 ---
 
 ## Products
 
 ### 1 · EV Market Intelligence
+
 Washington State EV registration data from the Department of Licensing — 280,000+ vehicles, 2015–2025.
 
 **What it shows:**
+
 - Fleet composition by model year, BEV vs PHEV split
 - Manufacturer market share and registration trends
 - Model range distribution and volume vs range scatter
@@ -17,15 +23,17 @@ Washington State EV registration data from the Department of Licensing — 280,0
 - Global EV context: sales by region, battery cost decline, WA share of US market
 
 <!-- Screenshot placeholder -->
-<!-- ![EV Dashboard Overview](screenshots/ev_overview.png) -->
-<!-- ![EV Geography Tab](screenshots/ev_geography.png) -->
+
+![EV Dashboard](screenshots/EV.png)
 
 ---
 
 ### 2 · Australian Energy Transition
+
 NEM region data (NSW, VIC, QLD, SA, TAS) covering 2015–2024, showing the shift from coal to renewables.
 
 **What it shows:**
+
 - Electricity demand patterns by region and season
 - Generation mix evolution — coal decline vs solar/wind growth
 - LCOE economics: CSIRO GenCost 2024-25 cost trajectories and spot price crossover
@@ -33,24 +41,23 @@ NEM region data (NSW, VIC, QLD, SA, TAS) covering 2015–2024, showing the shift
 - State comparison: radar chart, grouped generation bar, Australia map
 
 <!-- Screenshot placeholder -->
-<!-- ![Energy Landing](screenshots/energy_landing.png) -->
-<!-- ![Energy Generation Mix](screenshots/energy_generation.png) -->
-<!-- ![Energy Economics](screenshots/energy_economics.png) -->
+
+![Energy Dashboard](screenshots/Energy.png)
 
 ---
 
 ## Tech Stack
 
-| Layer | Tools |
-|---|---|
-| Backend | FastAPI, uvicorn |
-| Dashboards | Dash 2.17, Plotly |
-| Data | pandas, pyarrow (parquet) |
-| Caching | Flask-Caching (SimpleCache) |
-| EV data | Washington State DOL (CSV) |
+| Layer       | Tools                                                         |
+| ----------- | ------------------------------------------------------------- |
+| Backend     | FastAPI, uvicorn                                              |
+| Dashboards  | Dash 2.17, Plotly                                             |
+| Data        | pandas, pyarrow (parquet)                                     |
+| Caching     | Flask-Caching (SimpleCache)                                   |
+| EV data     | Washington State DOL (CSV)                                    |
 | Energy data | Synthetic (calibrated to AEMO) · Real API via OpenElectricity |
-| LCOE data | CSIRO GenCost 2024-25 (hardcoded constants) |
-| Testing | pytest, FastAPI TestClient, Flask test client |
+| LCOE data   | CSIRO GenCost 2024-25 (hardcoded constants)                   |
+| Testing     | pytest, FastAPI TestClient, Flask test client                 |
 
 ---
 
@@ -136,12 +143,14 @@ cp .env.example .env
 ### 3. Generate energy data
 
 **Option A — Synthetic data (recommended, no API key needed):**
+
 ```bash
 python data_pipeline/01_generate_synthetic_data.py
 python data_pipeline/02_clean_and_aggregate.py
 ```
 
 **Option B — Real API data (last 12 months, requires free API key from [openelectricity.org.au](https://platform.openelectricity.org.au)):**
+
 ```bash
 python data_pipeline/01_fetch_openelectricity.py
 python data_pipeline/02_clean_and_aggregate.py
@@ -159,12 +168,12 @@ python main.py
 
 Then open:
 
-| URL | Page |
-|---|---|
-| `http://localhost:8050` | Landing page |
-| `http://localhost:8050/ev/` | EV Market Intelligence |
-| `http://localhost:8050/energy/` | Australian Energy Transition |
-| `http://localhost:8050/api/docs` | REST API (Swagger) |
+| URL                              | Page                         |
+| -------------------------------- | ---------------------------- |
+| `http://localhost:8050`          | Landing page                 |
+| `http://localhost:8050/ev/`      | EV Market Intelligence       |
+| `http://localhost:8050/energy/`  | Australian Energy Transition |
+| `http://localhost:8050/api/docs` | REST API (Swagger)           |
 
 ---
 
@@ -201,21 +210,21 @@ pytest tests/e2e/           # 32 tests  — runs full pipeline in a temp directo
 
 ### Test coverage summary
 
-| Layer | Tests | Requires |
-|---|---|---|
-| Unit — core design system | 24 | nothing |
-| Unit — layout helpers | 40 | nothing |
-| Unit — landing page layout | 13 | nothing |
-| Unit — tab routing & app layout | 29 | ev_population.csv (EV tests skip without it) |
-| Unit — chart callback outputs | 32 | in-memory fixture |
-| Unit — api/cache schemas | 17 | in-memory fixture |
-| Unit — energy data filters | 19 | in-memory fixture |
-| Unit — EV data & filter | 21 | ev_population.csv (skipped without it) |
-| Unit — pipeline config constants | 26 | nothing |
-| Integration — REST API endpoints | 32 | parquet files (skipped without them) |
-| Integration — callback logic | 14 | in-memory fixture |
-| E2E — full pipeline → parquet schemas | 32 | nothing (generates data in tmp dir) |
-| **Total** | **299** | |
+| Layer                                 | Tests   | Requires                                     |
+| ------------------------------------- | ------- | -------------------------------------------- |
+| Unit — core design system             | 24      | nothing                                      |
+| Unit — layout helpers                 | 40      | nothing                                      |
+| Unit — landing page layout            | 13      | nothing                                      |
+| Unit — tab routing & app layout       | 29      | ev_population.csv (EV tests skip without it) |
+| Unit — chart callback outputs         | 32      | in-memory fixture                            |
+| Unit — api/cache schemas              | 17      | in-memory fixture                            |
+| Unit — energy data filters            | 19      | in-memory fixture                            |
+| Unit — EV data & filter               | 21      | ev_population.csv (skipped without it)       |
+| Unit — pipeline config constants      | 26      | nothing                                      |
+| Integration — REST API endpoints      | 32      | parquet files (skipped without them)         |
+| Integration — callback logic          | 14      | in-memory fixture                            |
+| E2E — full pipeline → parquet schemas | 32      | nothing (generates data in tmp dir)          |
+| **Total**                             | **299** |                                              |
 
 ### How Dash callbacks are tested
 
@@ -243,22 +252,22 @@ When a user moves a filter slider, the energy dashboard must re-run data queries
 
 **Per-callback breakdown (single interaction, uncached):**
 
-| Step | Time | % of total | Bottleneck? |
-|---|---|---|---|
-| Load parquet → pandas DataFrame | ~0.05 ms | < 1% | No |
-| pandas filter + groupby | ~0.40 ms | ~1% | No |
-| Plotly figure construction (×1) | ~8 ms | ~20% | **Yes** |
-| Full tab response (4 figures) | ~35–50 ms | 100% | — |
+| Step                            | Time      | % of total | Bottleneck? |
+| ------------------------------- | --------- | ---------- | ----------- |
+| Load parquet → pandas DataFrame | ~0.05 ms  | < 1%       | No          |
+| pandas filter + groupby         | ~0.40 ms  | ~1%        | No          |
+| Plotly figure construction (×1) | ~8 ms     | ~20%       | **Yes**     |
+| Full tab response (4 figures)   | ~35–50 ms | 100%       | —           |
 
 The data layer completes in under 0.5 ms. The remaining 35–49 ms is spent purely in Plotly building trace objects, computing axis ranges, and serialising to JSON — **none of which changes if the user triggers the same filter combination again**.
 
 We evaluated three data-layer alternatives:
 
-| Option | Approach | Filter+groupby latency | Verdict |
-|---|---|---|---|
-| pandas (current) | In-memory DataFrames | ~0.44 ms | Fastest at small scale |
-| DuckDB | In-process SQL on parquet | ~0.72 ms | Overkill; adds dependency |
-| Polars | Lazy evaluation | ~0.51 ms | Marginal gain; API churn |
+| Option           | Approach                  | Filter+groupby latency | Verdict                   |
+| ---------------- | ------------------------- | ---------------------- | ------------------------- |
+| pandas (current) | In-memory DataFrames      | ~0.44 ms               | Fastest at small scale    |
+| DuckDB           | In-process SQL on parquet | ~0.72 ms               | Overkill; adds dependency |
+| Polars           | Lazy evaluation           | ~0.51 ms               | Marginal gain; API churn  |
 
 **Conclusion:** Replacing pandas with DuckDB or Polars saves < 0.3 ms per query while adding complexity. The correct optimisation is caching **complete figure outputs**, not changing the data layer.
 
@@ -299,6 +308,10 @@ def register(app):
 
 **Effect:** Repeated filter interactions with the same combination of year range / regions / season return cached figures in < 1 ms instead of ~35–50 ms. First load per unique filter set still pays the full cost.
 
+<!-- Screenshot placeholder -->
+
+![Caching](screenshots/Cache.png)
+
 ---
 
 ## Future: Alternatives to Plotly
@@ -309,13 +322,13 @@ At current scale (monthly NEM data, ~600K rows) Plotly with caching is sufficien
 - **SVG rendering** degrades visibly past ~5K DOM nodes in the browser
 - **No true streaming** — full figure must be rebuilt and re-sent on every update
 
-| Library | Rendering | Python-native | Large data | Best for |
-|---|---|---|---|---|
-| **Plotly (current)** | SVG / WebGL opt-in | Yes | With `*gl` traces only | General dashboards + caching |
-| **Apache ECharts** | Canvas by default | Via pyecharts | Yes, natively | Real-time, high-volume; Sankey/treemap/geo |
-| **Bokeh** | Canvas / WebGL | Yes | Better than Plotly SVG | Streaming data; server-side downsampling |
-| **Altair** | SVG | Yes | No (hard cap ~5K rows) | Declarative EDA charts in notebooks |
-| **D3.js** | SVG / Canvas | No (JavaScript) | Yes (canvas mode) | Fully bespoke, JS-first teams |
+| Library              | Rendering          | Python-native   | Large data             | Best for                                   |
+| -------------------- | ------------------ | --------------- | ---------------------- | ------------------------------------------ |
+| **Plotly (current)** | SVG / WebGL opt-in | Yes             | With `*gl` traces only | General dashboards + caching               |
+| **Apache ECharts**   | Canvas by default  | Via pyecharts   | Yes, natively          | Real-time, high-volume; Sankey/treemap/geo |
+| **Bokeh**            | Canvas / WebGL     | Yes             | Better than Plotly SVG | Streaming data; server-side downsampling   |
+| **Altair**           | SVG                | Yes             | No (hard cap ~5K rows) | Declarative EDA charts in notebooks        |
+| **D3.js**            | SVG / Canvas       | No (JavaScript) | Yes (canvas mode)      | Fully bespoke, JS-first teams              |
 
 **ECharts** is the strongest long-term option — Canvas rendering, progressive loading, native streaming, and used in production by GitLab and OpenObserve as a direct Plotly replacement. Friction cost: it's JavaScript-only; Python integration via `pyecharts` or a custom Dash component.
 
