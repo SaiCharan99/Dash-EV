@@ -1,0 +1,17 @@
+ACCESSIBLE_INDEX = '''<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>'''

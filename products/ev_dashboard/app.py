@@ -6,11 +6,12 @@ import numpy as np
 from core.design_tokens import (
     BG, BG2, PANEL, TEXT, SECONDARY, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, RED, PURPLE, TEAL, PALETTE,
-    NAV_BG, NAV_TEXT, NAV_MUTE,
+    NAV_TEXT, NAV_MUTE,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.chart_factory import _chart, _rgba, _bar_h
 from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label
+from core.dash_utils import ACCESSIBLE_INDEX
 from products.ev_dashboard.data import (
     DF, ALL_MAKES, YEARS_WA, WA_COUNTIES,
     df_battery, df_global,
@@ -24,6 +25,7 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     title='EV Dashboard',
 )
+app.index_string = ACCESSIBLE_INDEX
 server = app.server
 
 _yr_marks = {
@@ -31,25 +33,12 @@ _yr_marks = {
     for y in YEARS_WA if y % 2 == 1
 }
 
-def _ts():
-    return {
-        'background': 'transparent', 'border': 'none',
-        'borderBottom': '2.5px solid transparent',
-        'color': NAV_MUTE, 'fontSize': '13px', 'fontWeight': '500',
-        'padding': '14px 16px', 'fontFamily': 'Inter, sans-serif',
-        'letterSpacing': '-0.1px',
-    }
-
-def _tss():
-    s = _ts()
-    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2.5px solid {BLUE}'})
-    return s
-
 
 app.layout = html.Div([
+    html.A('Skip to main content', href='#main-content', className='skip-link'),
 
     # ── nav ───────────────────────────────────────────────────────────
-    html.Div([
+    html.Nav([
         html.Div([
             html.Span('EV', style={
                 'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
@@ -61,21 +50,26 @@ app.layout = html.Div([
         ], style={'whiteSpace': 'nowrap'}),
 
         html.Div([
-            dcc.Tabs(id='main-tabs', value='overview', children=[
-                dcc.Tab(label='Fleet Overview', value='overview', style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Manufacturers',  value='mfr',      style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Models & Range', value='models',   style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Geography',      value='geo',      style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Global Context', value='global',   style=_ts(), selected_style=_tss()),
-            ], colors={'border': 'transparent', 'primary': BLUE, 'background': 'transparent'},
-               style={'border': 'none'}),
+            dcc.RadioItems(
+                id='main-tabs', value='overview',
+                options=[
+                    {'label': 'Fleet Overview', 'value': 'overview'},
+                    {'label': 'Manufacturers',  'value': 'mfr'},
+                    {'label': 'Models & Range', 'value': 'models'},
+                    {'label': 'Geography',      'value': 'geo'},
+                    {'label': 'Global Context', 'value': 'global'},
+                ],
+                inline=True, className='nav-tabs',
+                inputStyle={}, labelStyle={},
+                aria_label='Dashboard sections',
+            ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', style={
+        html.A('← Home', href='/', aria_label='Back to home', style={
             'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
             'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
         }),
-    ], style={
+    ], aria_label='EV dashboard navigation', style={
         'background': 'rgba(28,28,30,0.88)',
         'backdropFilter': 'blur(20px) saturate(180%)',
         'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
@@ -85,36 +79,36 @@ app.layout = html.Div([
         'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
-    html.Div([
+    html.Main([
 
         # ── page header ───────────────────────────────────────────────
         html.Div([
-            html.Div([
-                html.H1('EV Market Intelligence', style={
-                    'fontSize': '32px', 'fontWeight': '800', 'color': TEXT,
-                    'letterSpacing': '-0.8px', 'margin': '0', 'lineHeight': '1.1',
-                }),
-                html.P('Washington State Department of Licensing · 280,000+ registered vehicles',
-                       style={'fontSize': '13px', 'color': MUTED, 'marginTop': '7px',
-                              'fontWeight': '400'}),
-            ]),
+            html.H1('EV Market Intelligence', style={
+                'fontSize': '32px', 'fontWeight': '800', 'color': TEXT,
+                'letterSpacing': '-0.8px', 'margin': '0', 'lineHeight': '1.1',
+            }),
+            html.P('Washington State Department of Licensing · 280,000+ registered vehicles',
+                   style={'fontSize': '13px', 'color': MUTED, 'marginTop': '7px',
+                          'fontWeight': '400'}),
         ], style={'padding': '36px 36px 0'}),
 
         # ── filter bar ────────────────────────────────────────────────
         html.Div([
             html.Div([
-                _pill_label('Model Year'),
+                _pill_label('Model Year', 'lbl-yr-slider'),
                 dcc.RangeSlider(
                     id='yr-slider', min=2015, max=2025, step=1, value=[2015, 2025],
                     marks=_yr_marks, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
+                    aria_labelledby='lbl-yr-slider',
                 ),
             ], style={'flex': '3', 'minWidth': '240px'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch',
+                            'aria_hidden': 'true'}),
 
             html.Div([
-                _pill_label('EV Type'),
+                _pill_label('EV Type', 'lbl-type-filter'),
                 dcc.RadioItems(
                     id='type-filter', value='All', inline=True,
                     options=[{'label': 'All', 'value': 'All'},
@@ -122,20 +116,23 @@ app.layout = html.Div([
                              {'label': 'PHEV', 'value': 'PHEV'}],
                     className='seg-control',
                     inputStyle={}, labelStyle={},
+                    aria_labelledby='lbl-type-filter',
                 ),
             ], style={'flex': '1'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch',
+                            'aria_hidden': 'true'}),
 
             html.Div([
-                _pill_label('Make'),
+                _pill_label('Make', 'lbl-make-filter'),
                 dcc.Dropdown(
                     id='make-filter',
                     options=[{'label': m, 'value': m} for m in ALL_MAKES],
                     value='All', clearable=False, style={'minWidth': '160px'},
+                    aria_label='Filter by make',
                 ),
             ], style={'flex': '1.2'}),
-        ], style={
+        ], role='group', aria_label='Dashboard filters', style={
             'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
             'borderRadius': '18px',
@@ -156,10 +153,10 @@ app.layout = html.Div([
 
         html.Div(id='tab-content'),
 
-    ], style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
+    ], id='main-content', style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
 
     # ── footer ────────────────────────────────────────────────────────
-    html.Div([
+    html.Footer([
         html.Div(
             'Washington State DOL  ·  IEA Global EV Outlook  ·  BloombergNEF  ·  Dash & Plotly',
             style={'color': SUBTLE, 'fontSize': '11px'},

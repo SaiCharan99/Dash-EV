@@ -5,10 +5,11 @@ from dash import dcc, html, Input, Output
 from core.design_tokens import (
     BG, PANEL, TEXT, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, PURPLE, TEAL,
-    NAV_BG, NAV_TEXT, NAV_MUTE,
+    NAV_TEXT, NAV_MUTE,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.layout_helpers import _panel, _ph, _row, _pill_label
+from core.dash_utils import ACCESSIBLE_INDEX
 
 from products.energy_dashboard.data import NEM_REGIONS, SEASONS
 from core.app_cache import flask_cache
@@ -27,6 +28,7 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     title='AU Energy Transition',
 )
+app.index_string = ACCESSIBLE_INDEX
 server = app.server
 
 flask_cache.init_app(server, config={
@@ -50,25 +52,13 @@ _YEAR_MARKS = {
     for y in range(2015, 2025) if y % 2 == 1
 }
 
-def _ts():
-    return {
-        'background': 'transparent', 'border': 'none',
-        'borderBottom': '2.5px solid transparent',
-        'color': NAV_MUTE, 'fontSize': '13px', 'fontWeight': '500',
-        'padding': '14px 16px', 'fontFamily': 'Inter, sans-serif',
-        'letterSpacing': '-0.1px',
-    }
-
-def _tss():
-    s = _ts()
-    s.update({'color': NAV_TEXT, 'fontWeight': '600', 'borderBottom': f'2.5px solid {GREEN}'})
-    return s
 
 
 app.layout = html.Div([
+    html.A('Skip to main content', href='#main-content', className='skip-link'),
 
     # ── nav ───────────────────────────────────────────────────────────
-    html.Div([
+    html.Nav([
         html.Div([
             html.Span('AU', style={
                 'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
@@ -80,21 +70,26 @@ app.layout = html.Div([
         ], style={'whiteSpace': 'nowrap'}),
 
         html.Div([
-            dcc.Tabs(id='en-main-tabs', value='demand', children=[
-                dcc.Tab(label='Demand',           value='demand',     style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Generation Mix',   value='generation', style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Economics & LCOE', value='economics',  style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='Renewables',       value='renewables', style=_ts(), selected_style=_tss()),
-                dcc.Tab(label='State Comparison', value='comparison', style=_ts(), selected_style=_tss()),
-            ], colors={'border': 'transparent', 'primary': GREEN, 'background': 'transparent'},
-               style={'border': 'none'}),
+            dcc.RadioItems(
+                id='en-main-tabs', value='demand',
+                options=[
+                    {'label': 'Demand',           'value': 'demand'},
+                    {'label': 'Generation Mix',   'value': 'generation'},
+                    {'label': 'Economics & LCOE', 'value': 'economics'},
+                    {'label': 'Renewables',       'value': 'renewables'},
+                    {'label': 'State Comparison', 'value': 'comparison'},
+                ],
+                inline=True, className='nav-tabs',
+                inputStyle={}, labelStyle={},
+                aria_label='Dashboard sections',
+            ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', style={
+        html.A('← Home', href='/', aria_label='Back to home', style={
             'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
             'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
         }),
-    ], style={
+    ], aria_label='Energy dashboard navigation', style={
         'background': 'rgba(28,28,30,0.88)',
         'backdropFilter': 'blur(20px) saturate(180%)',
         'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
@@ -104,7 +99,7 @@ app.layout = html.Div([
         'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
-    html.Div([
+    html.Main([
 
         # ── page header ───────────────────────────────────────────────
         html.Div([
@@ -120,39 +115,44 @@ app.layout = html.Div([
         # ── filter bar ────────────────────────────────────────────────
         html.Div([
             html.Div([
-                _pill_label('Year Range'),
+                _pill_label('Year Range', 'lbl-en-yr'),
                 dcc.RangeSlider(
                     id='en-yr-slider', min=2015, max=2024, step=1, value=[2015, 2024],
                     marks=_YEAR_MARKS, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
+                    aria_labelledby='lbl-en-yr',
                 ),
             ], style={'flex': '3', 'minWidth': '240px'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
+                     aria_hidden='true'),
 
             html.Div([
-                _pill_label('Regions'),
+                _pill_label('Regions', 'lbl-en-regions'),
                 dcc.Dropdown(
                     id='en-region-filter',
                     options=[{'label': r, 'value': r} for r in NEM_REGIONS],
                     value=NEM_REGIONS, multi=True, clearable=False,
                     style={'minWidth': '220px'},
+                    aria_label='Filter by NEM region',
                 ),
             ], style={'flex': '2'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
+                     aria_hidden='true'),
 
             html.Div([
-                _pill_label('Season'),
+                _pill_label('Season', 'lbl-en-season'),
                 dcc.RadioItems(
                     id='en-season-filter', value='All', inline=True,
                     options=[{'label': s.capitalize(), 'value': s.capitalize()}
                              for s in ['All'] + SEASONS],
                     className='seg-control',
                     inputStyle={}, labelStyle={},
+                    aria_labelledby='lbl-en-season',
                 ),
             ], style={'flex': '2'}),
-        ], style={
+        ], role='group', aria_label='Dashboard filters', style={
             'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
             'borderRadius': '18px',
@@ -165,19 +165,24 @@ app.layout = html.Div([
 
         # ── KPI strip ─────────────────────────────────────────────────
         html.Div([
-            html.Div(id='en-kpi-total', style=_kpi_tile_style(GREEN),  className='dash-card'),
-            html.Div(id='en-kpi-peak',  style=_kpi_tile_style(BLUE),   className='dash-card'),
-            html.Div(id='en-kpi-renew', style=_kpi_tile_style(TEAL),   className='dash-card'),
-            html.Div(id='en-kpi-price', style=_kpi_tile_style(ORANGE), className='dash-card'),
-            html.Div(id='en-kpi-yoy',   style=_kpi_tile_style(PURPLE), className='dash-card'),
+            html.Div(id='en-kpi-total', style=_kpi_tile_style(GREEN),
+                     className='dash-card', aria_live='polite', aria_atomic='true'),
+            html.Div(id='en-kpi-peak',  style=_kpi_tile_style(BLUE),
+                     className='dash-card', aria_live='polite', aria_atomic='true'),
+            html.Div(id='en-kpi-renew', style=_kpi_tile_style(TEAL),
+                     className='dash-card', aria_live='polite', aria_atomic='true'),
+            html.Div(id='en-kpi-price', style=_kpi_tile_style(ORANGE),
+                     className='dash-card', aria_live='polite', aria_atomic='true'),
+            html.Div(id='en-kpi-yoy',   style=_kpi_tile_style(PURPLE),
+                     className='dash-card', aria_live='polite', aria_atomic='true'),
         ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 36px 0', 'flexWrap': 'wrap'}),
 
         html.Div(id='en-tab-content'),
 
-    ], style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
+    ], id='main-content', style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
 
     # ── footer ────────────────────────────────────────────────────────
-    html.Div([
+    html.Footer([
         html.Div(
             'AEMO · OpenElectricity · CSIRO GenCost 2024-25 · Dash & Plotly',
             style={'color': SUBTLE, 'fontSize': '11px'},

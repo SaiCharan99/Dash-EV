@@ -7,6 +7,7 @@ from core.design_tokens import (
     BLUE, GREEN, NAV_BG, NAV_TEXT, NAV_MUTE,
     CARD_BORDER, CARD_SHADOW,
 )
+from core.dash_utils import ACCESSIBLE_INDEX
 
 app = dash.Dash(
     __name__,
@@ -14,6 +15,7 @@ app = dash.Dash(
     assets_folder=os.path.join(os.path.dirname(__file__), '..', 'assets'),
     title='Energy Platform',
 )
+app.index_string = ACCESSIBLE_INDEX
 server = app.server
 
 # ── Switch between layouts ─────────────────────────────────────────
@@ -24,7 +26,7 @@ LAYOUT = 'A'
 
 # ── Shared components ──────────────────────────────────────────────
 def _nav():
-    return html.Div([
+    return html.Nav([
         html.Div([
             html.Span('Energy', style={
                 'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
@@ -37,7 +39,7 @@ def _nav():
         html.Div('data.wa.gov · AEMO · CSIRO GenCost', style={
             'fontSize': '11.5px', 'color': NAV_MUTE,
         }),
-    ], style={
+    ], aria_label='Site navigation', style={
         'background': 'rgba(28,28,30,0.90)',
         'backdropFilter': 'blur(20px) saturate(180%)',
         'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
@@ -50,7 +52,7 @@ def _nav():
 
 
 def _footer():
-    return html.Div(
+    return html.Footer(
         'Washington State DOL  ·  AEMO  ·  CSIRO GenCost 2024-25  ·  OpenElectricity  ·  Dash & Plotly',
         style={
             'textAlign': 'center', 'padding': '22px 48px',
@@ -75,7 +77,7 @@ def _pill(text, color):
 # OPTION A  —  Minimal Centered  (symmetric, spacious, Apple.com)
 # ══════════════════════════════════════════════════════════════════
 def _card_a(title, subtitle, description, href, accent, tags):
-    return html.A(href=href, style={'textDecoration': 'none', 'flex': '1',
+    return html.A(href=href, aria_label=f'Open {title} dashboard', style={'textDecoration': 'none', 'flex': '1',
                                     'minWidth': '320px', 'maxWidth': '480px'}, children=[
         html.Div([
             html.Div(style={'height': '3px', 'background': accent, 'borderRadius': '0'}),
@@ -125,9 +127,10 @@ def _card_a(title, subtitle, description, href, accent, tags):
 
 
 layout_a = html.Div([
+    html.A('Skip to main content', href='#main-content', className='skip-link'),
     _nav(),
 
-    html.Div([
+    html.Main([
 
         # hero — perfectly centred column
         html.Div([
@@ -186,7 +189,7 @@ layout_a = html.Div([
             'maxWidth': '1060px', 'margin': '0 auto',
         }),
 
-    ], style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
+    ], id='main-content', style={'background': BG, 'minHeight': 'calc(100vh - 56px)'}),
 
     _footer(),
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
@@ -196,7 +199,7 @@ layout_a = html.Div([
 # OPTION B  —  Bold Hero + Cards  (dark top section, high contrast)
 # ══════════════════════════════════════════════════════════════════
 def _card_b(title, subtitle, description, href, accent, tags):
-    return html.A(href=href, style={'textDecoration': 'none', 'flex': '1',
+    return html.A(href=href, aria_label=f'Open {title} dashboard', style={'textDecoration': 'none', 'flex': '1',
                                     'minWidth': '320px', 'maxWidth': '520px'}, children=[
         html.Div([
             # icon bar
@@ -250,77 +253,80 @@ def _card_b(title, subtitle, description, href, accent, tags):
 
 
 layout_b = html.Div([
+    html.A('Skip to main content', href='#main-content', className='skip-link'),
     _nav(),
 
-    # ── dark hero banner ──────────────────────────────────────────
-    html.Div([
+    html.Main([
+        # ── dark hero banner ──────────────────────────────────────────
         html.Div([
-            html.Div('Two dashboards. One platform.', style={
-                'fontSize': '12px', 'fontWeight': '600', 'color': 'rgba(255,255,255,0.45)',
-                'letterSpacing': '1.5px', 'textTransform': 'uppercase',
-                'marginBottom': '24px',
-            }),
-            html.H1('Energy Intelligence\nPlatform', style={
-                'fontSize': 'clamp(38px, 5vw, 62px)',
-                'fontWeight': '800', 'color': '#FFFFFF',
-                'letterSpacing': '-2px', 'margin': '0',
-                'lineHeight': '1.06', 'whiteSpace': 'pre-line',
-            }),
-            html.P(
-                'Data-driven tools for understanding EV adoption and the clean energy transition.',
-                style={
-                    'color': 'rgba(255,255,255,0.55)', 'fontSize': '16px',
-                    'margin': '20px 0 0', 'lineHeight': '1.65',
-                    'maxWidth': '420px',
-                }),
-        ], style={
-            'padding': '80px 48px 80px',
-            'maxWidth': '700px', 'margin': '0 auto',
-            'textAlign': 'center',
-            'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center',
-        }),
-    ], style={
-        'background': 'linear-gradient(160deg, #1C1C1E 0%, #2C2C2E 60%, #1A1A2E 100%)',
-        'borderBottom': '1px solid rgba(255,255,255,0.07)',
-    }),
-
-    # ── cards section ─────────────────────────────────────────────
-    html.Div([
-        html.Div([
-            html.Div('Choose a dashboard', style={
-                'fontSize': '13px', 'fontWeight': '600', 'color': SUBTLE,
-                'textAlign': 'center', 'marginBottom': '28px',
-                'letterSpacing': '0.2px',
-            }),
             html.Div([
-                _card_b(
-                    title='EV Market Intelligence',
-                    subtitle='Washington State · 280,000+ registered vehicles',
-                    description=(
-                        'Fleet composition, manufacturer trends, county-level geographic '
-                        'distribution, and global EV context from 2015 to 2025.'
-                    ),
-                    href='/ev/', accent=BLUE,
-                    tags=['BEV / PHEV', 'County Maps', 'Global Context'],
-                ),
-                _card_b(
-                    title='Australian Energy Transition',
-                    subtitle='NEM Regions · 2015–2024 · AEMO Data',
-                    description=(
-                        'Electricity demand, generation mix evolution, renewable growth '
-                        'trajectories and LCOE economics across NSW, VIC, QLD, SA and TAS.'
-                    ),
-                    href='/energy/', accent=GREEN,
-                    tags=['Demand', 'Generation Mix', 'LCOE Economics'],
-                ),
+                html.Div('Two dashboards. One platform.', style={
+                    'fontSize': '12px', 'fontWeight': '600', 'color': 'rgba(255,255,255,0.45)',
+                    'letterSpacing': '1.5px', 'textTransform': 'uppercase',
+                    'marginBottom': '24px',
+                }),
+                html.H1('Energy Intelligence\nPlatform', style={
+                    'fontSize': 'clamp(38px, 5vw, 62px)',
+                    'fontWeight': '800', 'color': '#FFFFFF',
+                    'letterSpacing': '-2px', 'margin': '0',
+                    'lineHeight': '1.06', 'whiteSpace': 'pre-line',
+                }),
+                html.P(
+                    'Data-driven tools for understanding EV adoption and the clean energy transition.',
+                    style={
+                        'color': 'rgba(255,255,255,0.55)', 'fontSize': '16px',
+                        'margin': '20px 0 0', 'lineHeight': '1.65',
+                        'maxWidth': '420px',
+                    }),
             ], style={
-                'display': 'flex', 'gap': '20px',
-                'justifyContent': 'center', 'alignItems': 'stretch',
-                'flexWrap': 'wrap',
-                'maxWidth': '1060px', 'margin': '0 auto',
+                'padding': '80px 48px 80px',
+                'maxWidth': '700px', 'margin': '0 auto',
+                'textAlign': 'center',
+                'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center',
             }),
-        ], style={'padding': '52px 48px 88px'}),
-    ], style={'background': BG}),
+        ], style={
+            'background': 'linear-gradient(160deg, #1C1C1E 0%, #2C2C2E 60%, #1A1A2E 100%)',
+            'borderBottom': '1px solid rgba(255,255,255,0.07)',
+        }),
+
+        # ── cards section ─────────────────────────────────────────────
+        html.Div([
+            html.Div([
+                html.Div('Choose a dashboard', style={
+                    'fontSize': '13px', 'fontWeight': '600', 'color': SUBTLE,
+                    'textAlign': 'center', 'marginBottom': '28px',
+                    'letterSpacing': '0.2px',
+                }),
+                html.Div([
+                    _card_b(
+                        title='EV Market Intelligence',
+                        subtitle='Washington State · 280,000+ registered vehicles',
+                        description=(
+                            'Fleet composition, manufacturer trends, county-level geographic '
+                            'distribution, and global EV context from 2015 to 2025.'
+                        ),
+                        href='/ev/', accent=BLUE,
+                        tags=['BEV / PHEV', 'County Maps', 'Global Context'],
+                    ),
+                    _card_b(
+                        title='Australian Energy Transition',
+                        subtitle='NEM Regions · 2015–2024 · AEMO Data',
+                        description=(
+                            'Electricity demand, generation mix evolution, renewable growth '
+                            'trajectories and LCOE economics across NSW, VIC, QLD, SA and TAS.'
+                        ),
+                        href='/energy/', accent=GREEN,
+                        tags=['Demand', 'Generation Mix', 'LCOE Economics'],
+                    ),
+                ], style={
+                    'display': 'flex', 'gap': '20px',
+                    'justifyContent': 'center', 'alignItems': 'stretch',
+                    'flexWrap': 'wrap',
+                    'maxWidth': '1060px', 'margin': '0 auto',
+                }),
+            ], style={'padding': '52px 48px 88px'}),
+        ], style={'background': BG}),
+    ], id='main-content'),
 
     _footer(),
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
