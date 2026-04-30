@@ -10,6 +10,7 @@ from core.design_tokens import (
 from core.layout_helpers import _panel, _ph, _row, _pill_label
 
 from products.energy_dashboard.data import NEM_REGIONS, SEASONS
+from core.app_cache import flask_cache
 
 import products.energy_dashboard.callbacks.cb_kpis        as _kpis
 import products.energy_dashboard.callbacks.cb_demand       as _demand
@@ -26,6 +27,11 @@ app = dash.Dash(
     title='AU Energy Transition',
 )
 server = app.server
+
+flask_cache.init_app(server, config={
+    'CACHE_TYPE':            'SimpleCache',
+    'CACHE_DEFAULT_TIMEOUT': 300,   # 5 minutes — matches typical user session
+})
 
 
 def _kpi_tile_style(accent):
