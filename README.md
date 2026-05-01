@@ -310,7 +310,7 @@ def register(app):
 
 <!-- Screenshot placeholder -->
 
-![Caching](screenshots/Cache.png)
+![Caching](screenshots/cache.png)
 
 ---
 
