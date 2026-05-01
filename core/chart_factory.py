@@ -65,10 +65,13 @@ def _dual_axis_chart(height=320):
     return base
 
 
-def _bar_h(x_vals, y_vals, color, hover_tmpl):
+def _bar_h(x_vals, y_vals, color, hover_tmpl, min_alpha=0.22):
     n = len(y_vals)
-    threshold = max(n - 3, 0)
-    colors = [color if i >= threshold else _rgba(color, 0.36) for i in range(n)]
+    # linear fade: index 0 (shortest bar) → min_alpha, index n-1 (longest) → 1.0
+    colors = [
+        color if i == n - 1 else _rgba(color, min_alpha + (1.0 - min_alpha) * i / max(n - 1, 1))
+        for i in range(n)
+    ]
     return go.Bar(
         x=x_vals, y=y_vals, orientation='h',
         marker=dict(color=colors, line=dict(color='rgba(0,0,0,0)', width=0)),

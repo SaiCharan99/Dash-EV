@@ -520,11 +520,9 @@ def cb_models(yr_range, ev_type, make):
 
     top_r = (bev.groupby('Model')['Range'].max()
              .sort_values(ascending=False).head(20).reset_index().sort_values('Range'))
-    fig3 = go.Figure(go.Bar(
-        x=top_r.Range, y=top_r.Model, orientation='h',
-        marker=dict(color=PALETTE[:len(top_r)], opacity=0.82,
-                    line=dict(color='rgba(0,0,0,0)', width=0)),
-        hovertemplate='<b>%{y}</b>: %{x:.0f} mi<extra></extra>',
+    fig3 = go.Figure(_bar_h(
+        top_r.Range, top_r.Model, PURPLE,
+        '<b>%{y}</b>: %{x:.0f} mi<extra></extra>',
     ))
     fig3.update_layout(**_chart(height=300), showlegend=False)
     fig3.update_layout(xaxis_title='Max Rated Range (miles)', margin=dict(l=140, r=12, t=8, b=36))
