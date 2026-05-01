@@ -5,7 +5,6 @@ from dash import dcc, html, Input, Output
 from core.design_tokens import (
     BG, PANEL, TEXT, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, PURPLE, TEAL,
-    NAV_TEXT, NAV_MUTE,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.layout_helpers import _panel, _ph, _row, _pill_label
@@ -61,11 +60,11 @@ app.layout = html.Div([
     html.Nav([
         html.Div([
             html.Span('AU', style={
-                'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
+                'fontWeight': '700', 'color': TEXT, 'fontSize': '14px',
                 'letterSpacing': '-0.3px',
             }),
             html.Span('  Energy Transition', style={
-                'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px',
+                'fontWeight': '400', 'color': MUTED, 'fontSize': '14px',
             }),
         ], style={'whiteSpace': 'nowrap'}),
 
@@ -81,22 +80,17 @@ app.layout = html.Div([
                 ],
                 inline=True, className='nav-tabs',
                 inputStyle={}, labelStyle={},
-                aria_label='Dashboard sections',
             ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', aria_label='Back to home', style={
-            'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
+        html.A('← Home', href='/', style={
+            'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
             'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
-        }),
-    ], aria_label='Energy dashboard navigation', style={
-        'background': 'rgba(28,28,30,0.88)',
-        'backdropFilter': 'blur(20px) saturate(180%)',
-        'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
+        }, **{"aria-label": "Back to home"}),
+    ], **{"aria-label": "Energy dashboard navigation"}, className='glass-nav', style={
         'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
         'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '56px',
-        'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
     html.Main([
@@ -120,12 +114,11 @@ app.layout = html.Div([
                     id='en-yr-slider', min=2015, max=2024, step=1, value=[2015, 2024],
                     marks=_YEAR_MARKS, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
-                    aria_labelledby='lbl-en-yr',
                 ),
             ], style={'flex': '3', 'minWidth': '240px'}),
 
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
-                     aria_hidden='true'),
+                     **{"aria-hidden": "true"}),
 
             html.Div([
                 _pill_label('Regions', 'lbl-en-regions'),
@@ -134,12 +127,11 @@ app.layout = html.Div([
                     options=[{'label': r, 'value': r} for r in NEM_REGIONS],
                     value=NEM_REGIONS, multi=True, clearable=False,
                     style={'minWidth': '220px'},
-                    aria_label='Filter by NEM region',
                 ),
             ], style={'flex': '2'}),
 
             html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
-                     aria_hidden='true'),
+                     **{"aria-hidden": "true"}),
 
             html.Div([
                 _pill_label('Season', 'lbl-en-season'),
@@ -149,10 +141,9 @@ app.layout = html.Div([
                              for s in ['All'] + SEASONS],
                     className='seg-control',
                     inputStyle={}, labelStyle={},
-                    aria_labelledby='lbl-en-season',
                 ),
             ], style={'flex': '2'}),
-        ], role='group', aria_label='Dashboard filters', style={
+        ], role='group', **{"aria-label": "Dashboard filters"}, style={
             'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
             'borderRadius': '18px',
@@ -166,15 +157,15 @@ app.layout = html.Div([
         # ── KPI strip ─────────────────────────────────────────────────
         html.Div([
             html.Div(id='en-kpi-total', style=_kpi_tile_style(GREEN),
-                     className='dash-card', aria_live='polite', aria_atomic='true'),
+                     className='dash-card', **{"aria-live": "polite", "aria-atomic": "true"}),
             html.Div(id='en-kpi-peak',  style=_kpi_tile_style(BLUE),
-                     className='dash-card', aria_live='polite', aria_atomic='true'),
+                     className='dash-card', **{"aria-live": "polite", "aria-atomic": "true"}),
             html.Div(id='en-kpi-renew', style=_kpi_tile_style(TEAL),
-                     className='dash-card', aria_live='polite', aria_atomic='true'),
+                     className='dash-card', **{"aria-live": "polite", "aria-atomic": "true"}),
             html.Div(id='en-kpi-price', style=_kpi_tile_style(ORANGE),
-                     className='dash-card', aria_live='polite', aria_atomic='true'),
+                     className='dash-card', **{"aria-live": "polite", "aria-atomic": "true"}),
             html.Div(id='en-kpi-yoy',   style=_kpi_tile_style(PURPLE),
-                     className='dash-card', aria_live='polite', aria_atomic='true'),
+                     className='dash-card', **{"aria-live": "polite", "aria-atomic": "true"}),
         ], style={'display': 'flex', 'gap': '16px', 'padding': '20px 36px 0', 'flexWrap': 'wrap'}),
 
         html.Div(id='en-tab-content'),

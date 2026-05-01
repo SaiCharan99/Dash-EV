@@ -6,7 +6,6 @@ import numpy as np
 from core.design_tokens import (
     BG, BG2, PANEL, TEXT, SECONDARY, MUTED, SUBTLE, SEP,
     BLUE, GREEN, ORANGE, RED, PURPLE, TEAL, PALETTE,
-    NAV_TEXT, NAV_MUTE,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.chart_factory import _chart, _rgba, _bar_h
@@ -41,11 +40,11 @@ app.layout = html.Div([
     html.Nav([
         html.Div([
             html.Span('EV', style={
-                'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
+                'fontWeight': '700', 'color': TEXT, 'fontSize': '14px',
                 'letterSpacing': '-0.3px',
             }),
             html.Span('  Market Intelligence', style={
-                'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px',
+                'fontWeight': '400', 'color': MUTED, 'fontSize': '14px',
             }),
         ], style={'whiteSpace': 'nowrap'}),
 
@@ -61,22 +60,17 @@ app.layout = html.Div([
                 ],
                 inline=True, className='nav-tabs',
                 inputStyle={}, labelStyle={},
-                aria_label='Dashboard sections',
             ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', aria_label='Back to home', style={
-            'fontSize': '12px', 'color': NAV_MUTE, 'textDecoration': 'none',
+        html.A('← Home', href='/', style={
+            'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
             'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
-        }),
-    ], aria_label='EV dashboard navigation', style={
-        'background': 'rgba(28,28,30,0.88)',
-        'backdropFilter': 'blur(20px) saturate(180%)',
-        'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
+        }, **{"aria-label": "Back to home"}),
+    ], **{"aria-label": "EV dashboard navigation"}, className='glass-nav', style={
         'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
         'position': 'sticky', 'top': '0', 'zIndex': '100', 'minHeight': '56px',
-        'borderBottom': '1px solid rgba(255,255,255,0.06)',
     }),
 
     html.Main([
@@ -100,12 +94,11 @@ app.layout = html.Div([
                     id='yr-slider', min=2015, max=2025, step=1, value=[2015, 2025],
                     marks=_yr_marks, allowCross=False,
                     tooltip={'placement': 'bottom', 'always_visible': False},
-                    aria_labelledby='lbl-yr-slider',
                 ),
             ], style={'flex': '3', 'minWidth': '240px'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch',
-                            'aria_hidden': 'true'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
+                     **{"aria-hidden": "true"}),
 
             html.Div([
                 _pill_label('EV Type', 'lbl-type-filter'),
@@ -116,12 +109,11 @@ app.layout = html.Div([
                              {'label': 'PHEV', 'value': 'PHEV'}],
                     className='seg-control',
                     inputStyle={}, labelStyle={},
-                    aria_labelledby='lbl-type-filter',
                 ),
             ], style={'flex': '1'}),
 
-            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch',
-                            'aria_hidden': 'true'}),
+            html.Div(style={'width': '1px', 'background': SEP, 'alignSelf': 'stretch'},
+                     **{"aria-hidden": "true"}),
 
             html.Div([
                 _pill_label('Make', 'lbl-make-filter'),
@@ -129,10 +121,9 @@ app.layout = html.Div([
                     id='make-filter',
                     options=[{'label': m, 'value': m} for m in ALL_MAKES],
                     value='All', clearable=False, style={'minWidth': '160px'},
-                    aria_label='Filter by make',
                 ),
             ], style={'flex': '1.2'}),
-        ], role='group', aria_label='Dashboard filters', style={
+        ], role='group', **{"aria-label": "Dashboard filters"}, style={
             'display': 'flex', 'alignItems': 'center', 'gap': '28px',
             'background': PANEL,
             'borderRadius': '18px',

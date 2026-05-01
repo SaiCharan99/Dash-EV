@@ -4,7 +4,7 @@ from dash import html
 
 from core.design_tokens import (
     BG, PANEL, TEXT, MUTED, SUBTLE, SEP,
-    BLUE, GREEN, NAV_BG, NAV_TEXT, NAV_MUTE,
+    BLUE, GREEN,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.dash_utils import ACCESSIBLE_INDEX
@@ -29,25 +29,21 @@ def _nav():
     return html.Nav([
         html.Div([
             html.Span('Energy', style={
-                'fontWeight': '700', 'color': NAV_TEXT, 'fontSize': '14px',
+                'fontWeight': '700', 'color': TEXT, 'fontSize': '14px',
                 'letterSpacing': '-0.3px',
             }),
             html.Span('  Platform', style={
-                'fontWeight': '400', 'color': NAV_MUTE, 'fontSize': '14px',
+                'fontWeight': '400', 'color': MUTED, 'fontSize': '14px',
             }),
         ]),
         html.Div('data.wa.gov · AEMO · CSIRO GenCost', style={
-            'fontSize': '11.5px', 'color': NAV_MUTE,
+            'fontSize': '11.5px', 'color': MUTED,
         }),
-    ], aria_label='Site navigation', style={
-        'background': 'rgba(28,28,30,0.90)',
-        'backdropFilter': 'blur(20px) saturate(180%)',
-        'WebkitBackdropFilter': 'blur(20px) saturate(180%)',
+    ], **{"aria-label": "Site navigation"}, className='glass-nav', style={
         'padding': '0 48px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
         'minHeight': '56px',
         'position': 'sticky', 'top': '0', 'zIndex': '100',
-        'borderBottom': '1px solid rgba(255,255,255,0.07)',
     })
 
 
@@ -77,8 +73,9 @@ def _pill(text, color):
 # OPTION A  —  Minimal Centered  (symmetric, spacious, Apple.com)
 # ══════════════════════════════════════════════════════════════════
 def _card_a(title, subtitle, description, href, accent, tags):
-    return html.A(href=href, aria_label=f'Open {title} dashboard', style={'textDecoration': 'none', 'flex': '1',
-                                    'minWidth': '320px', 'maxWidth': '480px'}, children=[
+    return html.A(href=href, style={'textDecoration': 'none', 'flex': '1',
+                                    'minWidth': '320px', 'maxWidth': '480px'},
+                  **{"aria-label": f"Open {title} dashboard"}, children=[
         html.Div([
             html.Div(style={'height': '3px', 'background': accent, 'borderRadius': '0'}),
             html.Div([
@@ -199,8 +196,9 @@ layout_a = html.Div([
 # OPTION B  —  Bold Hero + Cards  (dark top section, high contrast)
 # ══════════════════════════════════════════════════════════════════
 def _card_b(title, subtitle, description, href, accent, tags):
-    return html.A(href=href, aria_label=f'Open {title} dashboard', style={'textDecoration': 'none', 'flex': '1',
-                                    'minWidth': '320px', 'maxWidth': '520px'}, children=[
+    return html.A(href=href, style={'textDecoration': 'none', 'flex': '1',
+                                    'minWidth': '320px', 'maxWidth': '520px'},
+                  **{"aria-label": f"Open {title} dashboard"}, children=[
         html.Div([
             # icon bar
             html.Div([

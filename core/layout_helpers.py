@@ -1,6 +1,6 @@
 from dash import html
 from core.design_tokens import (
-    PANEL, TEXT, SECONDARY, MUTED, SUBTLE, SEP, BLUE,
+    PANEL, TEXT, MUTED, SUBTLE, BLUE,
     CARD_BORDER, CARD_SHADOW,
 )
 
@@ -44,12 +44,12 @@ def _legend_row(items):
     return html.Div([
         html.Div([
             html.Div(
+                role='img',
                 style={
                     'width': '8px', 'height': '8px', 'borderRadius': '50%',
                     'background': color, 'flexShrink': '0', 'marginTop': '3px',
                 },
-                role='img',
-                aria_label=f'{label} colour indicator',
+                **{'aria-label': f'{label} colour indicator'},
             ),
             html.Div([
                 html.Span(label, style={'fontSize': '12px', 'color': TEXT, 'fontWeight': '500'}),
@@ -71,28 +71,26 @@ def _kpi(label, vid, did, accent=BLUE):
         }),
         html.Div(
             id=vid,
-            aria_live='polite',
-            aria_atomic='true',
             style={
                 'fontSize': '2rem', 'fontWeight': '700', 'color': TEXT,
                 'letterSpacing': '-0.8px', 'lineHeight': '1.1', 'marginTop': '12px',
                 'fontVariantNumeric': 'tabular-nums',
             },
+            **{'aria-live': 'polite', 'aria-atomic': 'true'},
         ),
         html.Div(
             id=did,
-            aria_live='polite',
-            aria_atomic='true',
             style={
                 'fontSize': '12px', 'color': MUTED, 'marginTop': '5px', 'fontWeight': '400',
             },
+            **{'aria-live': 'polite', 'aria-atomic': 'true'},
         ),
         html.Div(
-            aria_hidden='true',
             style={
                 'height': '2px', 'width': '24px', 'background': accent,
                 'borderRadius': '2px', 'marginTop': '18px', 'opacity': '0.7',
             },
+            **{'aria-hidden': 'true'},
         ),
     ], style={
         'background': PANEL,

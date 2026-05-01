@@ -8,40 +8,6 @@
   padding: 0;
 }
 
-/* ─── lightning bolt cursor — /assets/lightning.svg ────────────── */
-/* Gold fill + dark amber edge + cream inner highlight (3D effect)  */
-/* html+body anchors the cursor through Dash re-renders;            */
-/* Plotly drag/interaction class names need explicit overrides       */
-/* because class selectors (0,1,0) beat * (0,0,0) at equal weight.  */
-html,
-body,
-* {
-  cursor: url("/assets/lightning.svg") 7 0, auto !important;
-}
-
-input,
-textarea,
-[contenteditable] {
-  cursor: url("/assets/lightning.svg") 7 0, text !important;
-}
-
-/* Plotly interaction overlay elements */
-.nsewdrag,
-.nsdrag,
-.ewdrag,
-.nedrag,
-.nwdrag,
-.sedrag,
-.swdrag,
-.drag,
-.js-plotly-plot .plotly .cursor-crosshair,
-.js-plotly-plot .plotly .cursor-move,
-.js-plotly-plot .plotly .cursor-pointer,
-.js-plotly-plot,
-.plotly,
-.plot-container {
-  cursor: url("/assets/lightning.svg") 7 0, auto !important;
-}
 
 :root {
   --bg: #f5f5f7;
@@ -149,22 +115,34 @@ body {
   background: transparent !important;
 }
 
-/* ─── nav pill tabs (dark nav bar variant) ─────────────────────── */
+/* ─── liquid glass nav bar ──────────────────────────────────────── */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset,
+              0 2px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── nav pill tabs (liquid glass treatment) ────────────────────── */
 .nav-tabs {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
   padding: 3px;
   gap: 1px;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
 }
 .nav-tabs label {
   display: flex;
   align-items: center;
   padding: 6px 15px;
-  border-radius: 8px;
+  border-radius: 9px;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(0, 0, 0, 0.38);
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   white-space: nowrap;
   user-select: none;
@@ -172,13 +150,15 @@ body {
   letter-spacing: -0.1px;
 }
 .nav-tabs label:has(input[type="radio"]:checked) {
-  background: rgba(255, 255, 255, 0.13);
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1c1c1e;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12),
+              0 0 0 0.5px rgba(0, 0, 0, 0.05),
+              0 1px 0 rgba(255, 255, 255, 0.8) inset;
   font-weight: 600;
 }
 .nav-tabs label:hover:not(:has(input[type="radio"]:checked)) {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(0, 0, 0, 0.58);
 }
 /* ─── skip navigation link ─────────────────────────────────────── */
 .skip-link {
