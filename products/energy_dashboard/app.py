@@ -3,11 +3,12 @@ import dash
 from dash import dcc, html, Input, Output
 
 from core.design_tokens import (
-    BG, PANEL, TEXT, MUTED, SUBTLE, SEP,
-    BLUE, GREEN, ORANGE, PURPLE, TEAL,
+    BG, PANEL, TEXT, SECONDARY, MUTED, SUBTLE, SEP,
+    BLUE, GREEN, ORANGE, RED, PURPLE, TEAL,
     CARD_BORDER, CARD_SHADOW,
 )
 from core.layout_helpers import _panel, _ph, _row, _pill_label
+from core.chart_factory import _rgba
 from core.dash_utils import ACCESSIBLE_INDEX
 
 from products.energy_dashboard.data import NEM_REGIONS, SEASONS
@@ -52,6 +53,110 @@ _YEAR_MARKS = {
 }
 
 
+# ── about modal helpers ───────────────────────────────────────────────────────
+_SL = {'fontSize': '11px', 'fontWeight': '700', 'color': SECONDARY,
+       'textTransform': 'uppercase', 'letterSpacing': '0.9px'}
+
+def _about_src(name, desc):
+    return html.Div([
+        html.Div(name, style={'fontSize': '14px', 'fontWeight': '600', 'color': TEXT, 'lineHeight': '1.3'}),
+        html.Div(desc, style={'fontSize': '13px', 'color': SECONDARY, 'marginTop': '3px', 'lineHeight': '1.5'}),
+    ], style={
+        'borderLeft': f'2px solid {GREEN}',
+        'paddingLeft': '14px', 'paddingTop': '2px', 'paddingBottom': '2px',
+    })
+
+def _about_step(num, text):
+    return html.Div([
+        html.Span(f'0{num}', style={
+            'fontSize': '11px', 'fontWeight': '700', 'color': GREEN,
+            'flexShrink': '0', 'minWidth': '24px', 'letterSpacing': '0.4px',
+        }),
+        html.Div(text, style={'fontSize': '14px', 'color': TEXT, 'lineHeight': '1.55'}),
+    ], style={'display': 'flex', 'gap': '10px', 'alignItems': 'flex-start'})
+
+def _about_pill(name):
+    return html.Span(name, style={
+        'background': 'rgba(0,0,0,0.04)', 'color': TEXT,
+        'border': f'1px solid {SEP}',
+        'padding': '4px 10px', 'borderRadius': '6px',
+        'fontSize': '12px', 'fontWeight': '500',
+    })
+
+_en_about_modal = html.Div(
+    id='en-about-modal',
+    style={'display': 'none'},
+    children=[
+        html.Div(id='en-about-backdrop', n_clicks=0, style={
+            'position': 'absolute', 'top': '0', 'left': '0', 'right': '0', 'bottom': '0',
+            'zIndex': '0',
+        }),
+        html.Div([
+            html.Div(style={'height': '3px', 'background': GREEN}),
+            html.Div([
+                html.Button('✕', id='en-about-close', style={
+                    'position': 'absolute', 'top': '16px', 'right': '16px',
+                    'background': 'rgba(0,0,0,0.05)', 'border': 'none', 'borderRadius': '50%',
+                    'width': '28px', 'height': '28px', 'fontSize': '12px', 'color': MUTED,
+                    'cursor': 'pointer', 'fontFamily': 'Inter, sans-serif',
+                    'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center',
+                }),
+                html.Div([
+                    html.Div('AU', style={
+                        'background': GREEN, 'color': '#fff', 'borderRadius': '7px',
+                        'padding': '3px 8px', 'fontSize': '11px', 'fontWeight': '700',
+                        'letterSpacing': '0.5px', 'display': 'inline-block', 'marginBottom': '14px',
+                    }),
+                    html.H2('AU Energy Transition', style={
+                        'fontSize': '22px', 'fontWeight': '800', 'color': TEXT,
+                        'letterSpacing': '-0.5px', 'margin': '0 0 5px',
+                    }),
+                    html.Div('NEM Regions · 2015-2024', style={'fontSize': '13px', 'color': MUTED}),
+                ], style={'marginBottom': '28px'}),
+                html.Div('About', style=_SL),
+                html.Div(style={'height': '8px'}),
+                html.P(
+                    "Tracks Australia's electricity sector transition across the National Electricity Market. "
+                    "Covers generation by fuel type, demand trends, spot pricing, and LCOE economics "
+                    "for all five NEM regions from 2015 to 2024, using real AEMO data.",
+                    style={'fontSize': '14px', 'color': TEXT, 'lineHeight': '1.7', 'margin': '0 0 24px'},
+                ),
+                html.Div('Data Sources', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_src('AEMO via OpenElectricity', 'Demand, generation by fuel type, and spot prices for NSW, VIC, QLD, SA, TAS'),
+                    _about_src('CSIRO GenCost 2024-25', 'LCOE ranges ($/MWh) and 2030 forward cost projections'),
+                    _about_src('Facility Registry', 'Operating capacity snapshot by region and fuel technology'),
+                ], style={'display': 'flex', 'flexDirection': 'column', 'gap': '14px', 'marginBottom': '24px'}),
+                html.Div('How to Use', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_step('1', 'Switch tabs: Demand, Generation Mix, Economics & LCOE, Renewables, State Comparison'),
+                    _about_step('2', 'Filter by year range (2015-2024), NEM region, and season'),
+                    _about_step('3', 'The KPI strip at the top always reflects the current filter selection'),
+                ], style={'display': 'flex', 'flexDirection': 'column', 'gap': '10px', 'marginBottom': '24px'}),
+                html.Div('Built With', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_pill('Python'),
+                    _about_pill('Dash'),
+                    _about_pill('Plotly'),
+                    _about_pill('Pandas'),
+                    _about_pill('FastAPI'),
+                    _about_pill('PyArrow'),
+                    _about_pill('OpenElectricity'),
+                ], style={'display': 'flex', 'flexWrap': 'wrap', 'gap': '7px'}),
+            ], style={'padding': '26px', 'position': 'relative',
+                      'maxHeight': 'calc(90vh - 3px)', 'overflowY': 'auto'}),
+        ], style={
+            'background': PANEL, 'borderRadius': '20px',
+            'maxWidth': '520px', 'width': '100%', 'overflow': 'hidden',
+            'boxShadow': '0 32px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.07)',
+            'position': 'relative', 'zIndex': '1',
+        }),
+    ],
+)
+
 
 app.layout = html.Div([
     html.A('Skip to main content', href='#main-content', className='skip-link'),
@@ -83,10 +188,18 @@ app.layout = html.Div([
             ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', style={
-            'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
-            'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
-        }, **{"aria-label": "Back to home"}),
+        html.Div([
+            html.Button('About', id='en-about-btn', style={
+                'background': 'none', 'border': f'1px solid {CARD_BORDER}',
+                'borderRadius': '8px', 'padding': '5px 12px',
+                'fontSize': '12px', 'color': MUTED, 'fontFamily': 'Inter, sans-serif',
+                'fontWeight': '500', 'letterSpacing': '0.1px', 'whiteSpace': 'nowrap',
+            }),
+            html.A('← Home', href='/', style={
+                'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
+                'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
+            }, **{"aria-label": "Back to home"}),
+        ], style={'display': 'flex', 'alignItems': 'center', 'gap': '12px'}),
     ], **{"aria-label": "Energy dashboard navigation"}, className='glass-nav', style={
         'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
@@ -182,6 +295,8 @@ app.layout = html.Div([
         'textAlign': 'center', 'padding': '20px',
         'background': PANEL, 'borderTop': f'1px solid {SEP}',
     }),
+
+    _en_about_modal,
 
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
 
@@ -325,3 +440,27 @@ def render_tab(tab):
                 ]),
             ),
         ], style={'padding': P})
+
+
+app.clientside_callback(
+    """
+    function(open_n, close_n, backdrop_n) {
+        var ctx = dash_clientside.callback_context;
+        if (!ctx.triggered || !ctx.triggered.length) return window.dash_clientside.no_update;
+        var pid = ctx.triggered[0].prop_id;
+        if (pid.indexOf('en-about-btn') !== -1) {
+            return {display:'flex', position:'fixed', top:'0', right:'0', bottom:'0', left:'0',
+                    zIndex:'1000', alignItems:'center', justifyContent:'center',
+                    background:'rgba(248,248,252,0.62)',
+                    backdropFilter:'blur(28px) saturate(160%)',
+                    WebkitBackdropFilter:'blur(28px) saturate(160%)',
+                    padding:'24px', overflowY:'auto'};
+        }
+        return {display: 'none'};
+    }
+    """,
+    Output('en-about-modal', 'style'),
+    [Input('en-about-btn', 'n_clicks'), Input('en-about-close', 'n_clicks'),
+     Input('en-about-backdrop', 'n_clicks')],
+    prevent_initial_call=True,
+)

@@ -33,6 +33,110 @@ _yr_marks = {
 }
 
 
+# ── about modal helpers ───────────────────────────────────────────────────────
+_SL = {'fontSize': '11px', 'fontWeight': '700', 'color': SECONDARY,
+       'textTransform': 'uppercase', 'letterSpacing': '0.9px'}
+
+def _about_src(name, desc):
+    return html.Div([
+        html.Div(name, style={'fontSize': '14px', 'fontWeight': '600', 'color': TEXT, 'lineHeight': '1.3'}),
+        html.Div(desc, style={'fontSize': '13px', 'color': SECONDARY, 'marginTop': '3px', 'lineHeight': '1.5'}),
+    ], style={
+        'borderLeft': f'2px solid {BLUE}',
+        'paddingLeft': '14px', 'paddingTop': '2px', 'paddingBottom': '2px',
+    })
+
+def _about_step(num, text):
+    return html.Div([
+        html.Span(f'0{num}', style={
+            'fontSize': '11px', 'fontWeight': '700', 'color': BLUE,
+            'flexShrink': '0', 'minWidth': '24px', 'letterSpacing': '0.4px',
+        }),
+        html.Div(text, style={'fontSize': '14px', 'color': TEXT, 'lineHeight': '1.55'}),
+    ], style={'display': 'flex', 'gap': '10px', 'alignItems': 'flex-start'})
+
+def _about_pill(name):
+    return html.Span(name, style={
+        'background': 'rgba(0,0,0,0.04)', 'color': TEXT,
+        'border': f'1px solid {SEP}',
+        'padding': '4px 10px', 'borderRadius': '6px',
+        'fontSize': '12px', 'fontWeight': '500',
+    })
+
+_ev_about_modal = html.Div(
+    id='ev-about-modal',
+    style={'display': 'none'},
+    children=[
+        html.Div(id='ev-about-backdrop', n_clicks=0, style={
+            'position': 'absolute', 'top': '0', 'left': '0', 'right': '0', 'bottom': '0',
+            'zIndex': '0',
+        }),
+        html.Div([
+            html.Div(style={'height': '3px', 'background': BLUE}),
+            html.Div([
+                html.Button('✕', id='ev-about-close', style={
+                    'position': 'absolute', 'top': '16px', 'right': '16px',
+                    'background': 'rgba(0,0,0,0.05)', 'border': 'none', 'borderRadius': '50%',
+                    'width': '28px', 'height': '28px', 'fontSize': '12px', 'color': MUTED,
+                    'cursor': 'pointer', 'fontFamily': 'Inter, sans-serif',
+                    'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center',
+                }),
+                html.Div([
+                    html.Div('EV', style={
+                        'background': BLUE, 'color': '#fff', 'borderRadius': '7px',
+                        'padding': '3px 8px', 'fontSize': '11px', 'fontWeight': '700',
+                        'letterSpacing': '0.5px', 'display': 'inline-block', 'marginBottom': '14px',
+                    }),
+                    html.H2('EV Market Intelligence', style={
+                        'fontSize': '22px', 'fontWeight': '800', 'color': TEXT,
+                        'letterSpacing': '-0.5px', 'margin': '0 0 5px',
+                    }),
+                    html.Div('Washington State · 2015–2025', style={'fontSize': '13px', 'color': MUTED}),
+                ], style={'marginBottom': '28px'}),
+                html.Div('About', style=_SL),
+                html.Div(style={'height': '8px'}),
+                html.P(
+                    "Analysis of Washington State's electric vehicle adoption from 2015 to 2025. "
+                    "Data covers every registered EV (make, model, year, county, electric range) "
+                    "sourced from the WA Department of Licensing open data portal.",
+                    style={'fontSize': '14px', 'color': TEXT, 'lineHeight': '1.7', 'margin': '0 0 24px'},
+                ),
+                html.Div('Data Sources', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_src('WA Dept. of Licensing', '280,000+ EV registrations · make, model, county, electric range'),
+                    _about_src('Global EV Outlook', 'Sales estimates across 12 countries from 2015 to 2024'),
+                    _about_src('Battery Technology', 'Pack cost ($/kWh) and average range trends, 2013 to 2025'),
+                ], style={'display': 'flex', 'flexDirection': 'column', 'gap': '14px', 'marginBottom': '24px'}),
+                html.Div('How to Use', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_step('1', 'Switch tabs in the nav bar: Fleet Overview, Manufacturers, Models & Range, Geography, Global Context'),
+                    _about_step('2', 'Adjust the filters: year range, EV type (BEV / PHEV), and manufacturer'),
+                    _about_step('3', 'Hover any chart for exact values; charts update instantly on filter change'),
+                ], style={'display': 'flex', 'flexDirection': 'column', 'gap': '10px', 'marginBottom': '24px'}),
+                html.Div('Built With', style=_SL),
+                html.Div(style={'height': '10px'}),
+                html.Div([
+                    _about_pill('Python'),
+                    _about_pill('Dash'),
+                    _about_pill('Plotly'),
+                    _about_pill('Pandas'),
+                    _about_pill('FastAPI'),
+                    _about_pill('Uvicorn'),
+                ], style={'display': 'flex', 'flexWrap': 'wrap', 'gap': '7px'}),
+            ], style={'padding': '26px', 'position': 'relative',
+                      'maxHeight': 'calc(90vh - 3px)', 'overflowY': 'auto'}),
+        ], style={
+            'background': PANEL, 'borderRadius': '20px',
+            'maxWidth': '520px', 'width': '100%', 'overflow': 'hidden',
+            'boxShadow': '0 32px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.07)',
+            'position': 'relative', 'zIndex': '1',
+        }),
+    ],
+)
+
+
 app.layout = html.Div([
     html.A('Skip to main content', href='#main-content', className='skip-link'),
 
@@ -63,10 +167,18 @@ app.layout = html.Div([
             ),
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
-        html.A('← Home', href='/', style={
-            'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
-            'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
-        }, **{"aria-label": "Back to home"}),
+        html.Div([
+            html.Button('About', id='ev-about-btn', style={
+                'background': 'none', 'border': f'1px solid {CARD_BORDER}',
+                'borderRadius': '8px', 'padding': '5px 12px',
+                'fontSize': '12px', 'color': MUTED, 'fontFamily': 'Inter, sans-serif',
+                'fontWeight': '500', 'letterSpacing': '0.1px', 'whiteSpace': 'nowrap',
+            }),
+            html.A('← Home', href='/', style={
+                'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
+                'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
+            }, **{"aria-label": "Back to home"}),
+        ], style={'display': 'flex', 'alignItems': 'center', 'gap': '12px'}),
     ], **{"aria-label": "EV dashboard navigation"}, className='glass-nav', style={
         'padding': '0 32px',
         'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between',
@@ -156,6 +268,8 @@ app.layout = html.Div([
         'textAlign': 'center', 'padding': '20px',
         'background': PANEL, 'borderTop': f'1px solid {SEP}',
     }),
+
+    _ev_about_modal,
 
 ], style={'fontFamily': 'Inter, -apple-system, sans-serif'})
 
@@ -714,3 +828,27 @@ def cb_global(yr_range, ev_type, make):
     fig4.update_layout(yaxis_title='WA Share of US Market (%)', bargap=0.38)
 
     return fig1, fig2, fig3, fig4
+
+
+app.clientside_callback(
+    """
+    function(open_n, close_n, backdrop_n) {
+        var ctx = dash_clientside.callback_context;
+        if (!ctx.triggered || !ctx.triggered.length) return window.dash_clientside.no_update;
+        var pid = ctx.triggered[0].prop_id;
+        if (pid.indexOf('ev-about-btn') !== -1) {
+            return {display:'flex', position:'fixed', top:'0', right:'0', bottom:'0', left:'0',
+                    zIndex:'1000', alignItems:'center', justifyContent:'center',
+                    background:'rgba(248,248,252,0.62)',
+                    backdropFilter:'blur(28px) saturate(160%)',
+                    WebkitBackdropFilter:'blur(28px) saturate(160%)',
+                    padding:'24px', overflowY:'auto'};
+        }
+        return {display: 'none'};
+    }
+    """,
+    Output('ev-about-modal', 'style'),
+    [Input('ev-about-btn', 'n_clicks'), Input('ev-about-close', 'n_clicks'),
+     Input('ev-about-backdrop', 'n_clicks')],
+    prevent_initial_call=True,
+)
