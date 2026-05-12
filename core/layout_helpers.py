@@ -103,6 +103,22 @@ def _kpi(label, vid, did, accent=BLUE):
     }, className='dash-card')
 
 
+def _cap(description, show_reset=True):
+    return html.Div([
+        html.Div(description, style={
+            'fontSize': '12px', 'color': MUTED, 'lineHeight': '1.55', 'flex': '1',
+        }),
+        html.Div('↺ double-click to reset', style={
+            'fontSize': '10.5px', 'color': SUBTLE, 'letterSpacing': '0.2px',
+            'flexShrink': '0', 'marginLeft': '14px', 'whiteSpace': 'nowrap',
+            'alignSelf': 'flex-end',
+        }) if show_reset else '',
+    ], style={
+        'display': 'flex', 'alignItems': 'flex-start', 'justifyContent': 'space-between',
+        'padding': '6px 20px 18px', 'gap': '12px',
+    })
+
+
 def _pill_label(text, label_id=None):
     style = {
         'fontSize': '10px', 'fontWeight': '600', 'color': SUBTLE,

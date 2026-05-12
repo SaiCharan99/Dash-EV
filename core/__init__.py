@@ -9,7 +9,7 @@ from core.design_tokens import (
     ENERGY_SOURCE_COLORS, ENERGY_SOURCE_LABELS,
 )
 from core.chart_factory import _chart, _dual_axis_chart, _rgba, _bar_h
-from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label
+from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label, _cap
 from core.app_cache import flask_cache
 from core.dash_utils import ACCESSIBLE_INDEX
 
@@ -23,6 +23,6 @@ __all__ = [
     'ENERGY_SOLAR', 'ENERGY_WIND', 'ENERGY_COAL', 'ENERGY_GAS', 'ENERGY_HYDRO', 'ENERGY_BATT',
     'ENERGY_SOURCE_COLORS', 'ENERGY_SOURCE_LABELS',
     '_chart', '_dual_axis_chart', '_rgba', '_bar_h',
-    '_panel', '_ph', '_row', '_kpi', '_legend_row', '_pill_label',
+    '_panel', '_ph', '_row', '_kpi', '_legend_row', '_pill_label', '_cap',
     'flask_cache', 'ACCESSIBLE_INDEX',
 ]

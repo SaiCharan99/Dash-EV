@@ -1,8 +1,10 @@
 import plotly.graph_objects as go
 from dash import Input, Output
 
+import numpy as np
+
 from core.design_tokens import (
-    PANEL, TEXT, MUTED,
+    PANEL, TEXT, MUTED, SEP, PALETTE,
     BLUE, GREEN, ORANGE, RED, PURPLE, TEAL,
     ENERGY_SOLAR, ENERGY_WIND, ENERGY_COAL, ENERGY_GAS,
 )
@@ -152,15 +154,87 @@ def _compute_economics(yr_range, regions, season):
         hovermode='x unified',
     )
 
-    return fig1, fig2, fig3, fig4
+    # ── Price duration curve ──────────────────────────────────────────────────
+    fig5 = go.Figure()
+    if p is not None and not p.empty:
+        for i, reg in enumerate(sorted(p.region.unique())):
+            sub = p[p.region == reg].sort_values('avg_spot_mwh', ascending=False).reset_index(drop=True)
+            if sub.empty:
+                continue
+            x_pct = np.linspace(0, 100, len(sub))
+            color = PALETTE[i % len(PALETTE)]
+            fig5.add_trace(go.Scatter(
+                x=x_pct, y=sub.avg_spot_mwh,
+                name=reg, mode='lines',
+                line=dict(color=color, width=2),
+                hovertemplate=f'<b>{reg}</b>  top %{{x:.0f}}%: $%{{y:.0f}}/MWh<extra></extra>',
+            ))
+    fig5.update_layout(**_chart(height=300))
+    fig5.update_layout(
+        xaxis_title='% of months (sorted high to low)',
+        yaxis_title='$/MWh',
+        hovermode='x unified',
+    )
+
+    # ── Renewable share vs wholesale price scatter ────────────────────────────
+    from products.energy_dashboard.data import filter_generation
+    g = filter_generation(list(regions), list(yr_range))
+    fig6 = go.Figure()
+    if g is not None and not g.empty and p is not None and not p.empty:
+        annual_total = g.groupby(['region', 'year'])['generation_gwh'].sum().reset_index()
+        annual_ren = (g[g.source_category == 'renewable']
+                      .groupby(['region', 'year'])['generation_gwh']
+                      .sum().reset_index())
+        ren = annual_total.merge(annual_ren, on=['region', 'year'],
+                                 suffixes=('_tot', '_ren'), how='left').fillna(0)
+        ren['ren_pct'] = ren.generation_gwh_ren / ren.generation_gwh_tot * 100
+        price_annual = p.groupby(['region', 'year'])['avg_spot_mwh'].mean().reset_index()
+        merged = ren.merge(price_annual, on=['region', 'year'])
+
+        regions_sorted = sorted(merged.region.unique())
+        for i, reg in enumerate(regions_sorted):
+            sub = merged[merged.region == reg]
+            color = PALETTE[i % len(PALETTE)]
+            fig6.add_trace(go.Scatter(
+                x=sub.ren_pct, y=sub.avg_spot_mwh,
+                name=reg, mode='markers',
+                marker=dict(size=10, color=_rgba(color, 0.75),
+                            line=dict(color=color, width=1.5)),
+                customdata=sub.year,
+                hovertemplate=(
+                    f'<b>{reg} %{{customdata}}</b><br>'
+                    'Renewable: %{x:.1f}%<br>'
+                    'Price: $%{y:.0f}/MWh<extra></extra>'
+                ),
+            ))
+        if len(merged) > 2:
+            slope, intercept = np.polyfit(merged.ren_pct, merged.avg_spot_mwh, 1)
+            corr = float(np.corrcoef(merged.ren_pct, merged.avg_spot_mwh)[0, 1])
+            x_line = np.array([merged.ren_pct.min(), merged.ren_pct.max()])
+            fig6.add_trace(go.Scatter(
+                x=x_line, y=slope * x_line + intercept,
+                name=f'trend (r={corr:.2f})',
+                mode='lines',
+                line=dict(color=TEXT, width=1.5, dash='dash'),
+                hoverinfo='skip',
+            ))
+    fig6.update_layout(**_chart(height=300))
+    fig6.update_layout(
+        xaxis_title='Renewable share (%)',
+        yaxis_title='Avg wholesale price ($/MWh)',
+    )
+
+    return fig1, fig2, fig3, fig4, fig5, fig6
 
 
 def register(app):
     @app.callback(
-        Output('econ-lcoe-range',    'figure'),
-        Output('econ-lcoe-trend',    'figure'),
-        Output('econ-price-vs-lcoe', 'figure'),
-        Output('econ-demand-cost',   'figure'),
+        Output('econ-lcoe-range',      'figure'),
+        Output('econ-lcoe-trend',      'figure'),
+        Output('econ-price-vs-lcoe',   'figure'),
+        Output('econ-demand-cost',     'figure'),
+        Output('econ-price-duration',  'figure'),
+        Output('econ-share-vs-price',  'figure'),
         Input('en-yr-slider',     'value'),
         Input('en-region-filter', 'value'),
         Input('en-season-filter', 'value'),
@@ -169,7 +243,7 @@ def register(app):
         from api.cache import is_ready
         empty = go.Figure().update_layout(**_chart())
         if not is_ready():
-            return empty, empty, empty, empty
+            return empty, empty, empty, empty, empty, empty
 
         return _compute_economics(
             tuple(yr_range),

@@ -1,9 +1,11 @@
+import numpy as np
 import plotly.graph_objects as go
 from dash import Input, Output
 
 from core.design_tokens import (
-    TEXT, MUTED, PALETTE,
-    TEAL, ENERGY_SOURCE_COLORS, ENERGY_SOURCE_LABELS,
+    PANEL, TEXT, MUTED, PALETTE,
+    TEAL, ENERGY_SOLAR, ENERGY_WIND,
+    ENERGY_SOURCE_COLORS, ENERGY_SOURCE_LABELS,
 )
 from core.chart_factory import _chart, _rgba
 from core.app_cache import flask_cache
@@ -89,14 +91,64 @@ def _compute_renewables(yr_range, regions, season):
         margin=dict(l=140, r=12, t=8, b=36),
     )
 
-    return fig1, fig2, fig3
+    # ── Solar–Wind complementarity scatter (monthly GWh) ──────────────────────
+    monthly = g.groupby(['region', 'year', 'month', 'source'])['generation_gwh'].sum().reset_index()
+    pivot = monthly.pivot_table(
+        index=['region', 'year', 'month'],
+        columns='source',
+        values='generation_gwh',
+        aggfunc='sum',
+    ).reset_index().fillna(0)
+
+    solar_cols = [c for c in pivot.columns if c in ('solar_utility', 'solar_rooftop')]
+    wind_cols  = [c for c in pivot.columns if c == 'wind']
+
+    fig4 = go.Figure()
+    if solar_cols and wind_cols:
+        pivot['solar_total'] = pivot[solar_cols].sum(axis=1)
+        pivot['wind_total']  = pivot[wind_cols].sum(axis=1)
+        valid = pivot[(pivot.solar_total > 0) & (pivot.wind_total > 0)]
+        if not valid.empty:
+            for i, reg in enumerate(sorted(valid.region.unique())):
+                sub = valid[valid.region == reg]
+                color = PALETTE[i % len(PALETTE)]
+                fig4.add_trace(go.Scatter(
+                    x=sub.solar_total, y=sub.wind_total,
+                    mode='markers', name=reg,
+                    marker=dict(size=7, color=_rgba(color, 0.55),
+                                line=dict(color=color, width=1)),
+                    customdata=np.column_stack([sub.year, sub.month]),
+                    hovertemplate=(
+                        f'<b>{reg}</b> %{{customdata[0]}}-%{{customdata[1]:02d}}<br>'
+                        'Solar: %{x:,.0f} GWh<br>'
+                        'Wind:  %{y:,.0f} GWh<extra></extra>'
+                    ),
+                ))
+            if len(valid) > 2:
+                corr = float(np.corrcoef(valid.solar_total, valid.wind_total)[0, 1])
+                slope, intercept = np.polyfit(valid.solar_total, valid.wind_total, 1)
+                x_line = np.array([valid.solar_total.min(), valid.solar_total.max()])
+                fig4.add_trace(go.Scatter(
+                    x=x_line, y=slope * x_line + intercept,
+                    mode='lines', name=f'trend (r={corr:.2f})',
+                    line=dict(color=TEXT, width=1.5, dash='dash'),
+                    hoverinfo='skip',
+                ))
+    fig4.update_layout(**_chart(height=320))
+    fig4.update_layout(
+        xaxis_title='Solar GWh (monthly)',
+        yaxis_title='Wind GWh (monthly)',
+    )
+
+    return fig1, fig2, fig3, fig4
 
 
 def register(app):
     @app.callback(
-        Output('ren-share-bar',       'figure'),
-        Output('ren-cf-heatmap',      'figure'),
-        Output('ren-growth-waterfall', 'figure'),
+        Output('ren-share-bar',         'figure'),
+        Output('ren-cf-heatmap',        'figure'),
+        Output('ren-growth-waterfall',  'figure'),
+        Output('ren-solar-wind-corr',   'figure'),
         Input('en-yr-slider',     'value'),
         Input('en-region-filter', 'value'),
         Input('en-season-filter', 'value'),
@@ -105,7 +157,7 @@ def register(app):
         from api.cache import is_ready
         empty = go.Figure().update_layout(**_chart())
         if not is_ready():
-            return empty, empty, empty
+            return empty, empty, empty, empty
 
         result = _compute_renewables(
             tuple(yr_range),
@@ -113,5 +165,5 @@ def register(app):
             season or 'All',
         )
         if result is None:
-            return empty, empty, empty
+            return empty, empty, empty, empty
         return result

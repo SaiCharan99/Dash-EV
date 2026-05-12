@@ -19,16 +19,16 @@ Outputs: `dem-timeseries`, `dem-seasonal-box`, `dem-heatmap`
 Data: `filter_demand()`
 
 ## cb_generation.py — Generation Mix tab
-Outputs: `gen-trend-lines`, `gen-stacked-bar`, `gen-donut`, `gen-donut-legend`, `gen-monthly-area`  
+Outputs: `gen-trend-lines`, `gen-stacked-bar`, `gen-donut`, `gen-donut-legend`, `gen-monthly-area`, `gen-carbon-intensity`, `gen-coal-runway`  
 Data: `filter_generation()`  
-Note: donut legend is a separate `html.Div` output built alongside the donut chart.
+Note: donut legend is a separate `html.Div` output built alongside the donut chart. Carbon intensity uses module-level `EMISSION_FACTORS` (tCO2/MWh per fuel). Coal runway uses hardcoded `COAL_RETIREMENT` schedule (name, MW, start year, end year).
 
 ## cb_economics.py — Economics & LCOE tab
-Outputs: `econ-lcoe-range`, `econ-lcoe-trend`, `econ-price-vs-lcoe`, `econ-demand-cost`  
-Data: `get_lcoe_df()` (CSIRO constants) + `filter_prices()` + `filter_demand()`
+Outputs: `econ-lcoe-range`, `econ-lcoe-trend`, `econ-price-vs-lcoe`, `econ-demand-cost`, `econ-price-duration`, `econ-share-vs-price`  
+Data: `get_lcoe_df()` (CSIRO constants) + `filter_prices()` + `filter_demand()` + `filter_generation()` (for share-vs-price scatter)
 
 ## cb_renewables.py — Renewables Growth tab
-Outputs: `ren-share-bar`, `ren-cf-heatmap`, `ren-growth-waterfall`  
+Outputs: `ren-share-bar`, `ren-cf-heatmap`, `ren-growth-waterfall`, `ren-solar-wind-corr`  
 Data: `filter_generation()`
 
 ## cb_comparison.py — State Comparison tab

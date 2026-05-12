@@ -7,7 +7,7 @@ from core.design_tokens import (
     BLUE, GREEN, ORANGE, RED, PURPLE, TEAL,
     CARD_BORDER, CARD_SHADOW,
 )
-from core.layout_helpers import _panel, _ph, _row, _pill_label
+from core.layout_helpers import _panel, _ph, _row, _pill_label, _cap
 from core.chart_factory import _rgba
 from core.dash_utils import ACCESSIBLE_INDEX
 
@@ -323,11 +323,13 @@ def render_tab(tab):
                     _ph('Electricity Demand by Region', 'Monthly GWh · 2015–2024'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-timeseries', config=cfg),
+                    _cap('Monthly grid consumption stacked by NEM region. The post-2017 flattening partly reflects rooftop solar offsetting daytime grid demand rather than a real consumption fall.'),
                 ], flex=2),
                 _panel([
                     _ph('Seasonal Distribution', 'GWh by season · box plot'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-seasonal-box', config=cfg),
+                    _cap('Distribution of monthly demand within each season. Wide summer spread reflects heatwave volatility that drives grid capacity sizing.'),
                 ]),
             ),
             _row(
@@ -335,6 +337,7 @@ def render_tab(tab):
                     _ph('Demand Heatmap', 'Avg daily GW · month × year'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-heatmap', config=cfg),
+                    _cap('Daily-average load by month and year. Two climate zones visible: mainland summer (Dec–Feb cooling) peaks, Tasmanian winter (Jun–Aug heating) peaks.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -346,11 +349,13 @@ def render_tab(tab):
                     _ph('Generation by Source', 'Annual GWh · 2015–2024'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gen-trend-lines', config=cfg),
+                    _cap('The "scissor chart" of the energy transition: coal falling while solar and wind rise. Hazelwood (2017) and Liddell (2023) closures appear as visible drops in coal output.'),
                 ], flex=2),
                 _panel([
                     _ph('Current Year Mix', 'Share of total generation'),
                     dcc.Graph(id='gen-donut', config=cfg),
                     html.Div(id='gen-donut-legend'),
+                    _cap('Latest year fuel mix. Center number is the renewable share, the single most-quoted progress indicator.', show_reset=False),
                 ]),
             ),
             _row(
@@ -358,11 +363,27 @@ def render_tab(tab):
                     _ph('Annual Generation Stack', 'GWh by fuel type'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gen-stacked-bar', config=cfg),
+                    _cap('Same data as the trend chart but stacked. Total generation stays roughly flat: this is substitution, not addition.'),
                 ], flex=2),
                 _panel([
                     _ph('Monthly Generation', 'Last 3 years · stacked area'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gen-monthly-area', config=cfg),
+                    _cap('Solar peaks in summer, wind peaks in winter. Their anti-correlation is the diversification argument for a wind+solar grid.'),
+                ]),
+            ),
+            _row(
+                _panel([
+                    _ph('Grid Carbon Intensity', 'tCO₂ per MWh · derived from fuel mix'),
+                    html.Div(style={'height': '12px'}),
+                    dcc.Graph(id='gen-carbon-intensity', config=cfg),
+                    _cap('Emissions per unit of electricity, derived from the fuel mix and standard emission factors. The most important single metric of decarbonization progress.'),
+                ], flex=2),
+                _panel([
+                    _ph('Coal Retirement Runway', 'Major NEM coal units · closure schedule'),
+                    html.Div(style={'height': '12px'}),
+                    dcc.Graph(id='gen-coal-runway', config=cfg),
+                    _cap('Operating lifespan of the ten largest NEM coal units. Faded bars are already retired; the next decade closes roughly half the remaining fleet.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -374,11 +395,13 @@ def render_tab(tab):
                     _ph('LCOE by Technology', '$/MWh · CSIRO GenCost 2024-25'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='econ-lcoe-range', config=cfg),
+                    _cap('Levelized cost of energy: the all-in dollars per MWh including capital, fuel, and operations. Solar and wind now sit below all fossil generation.'),
                 ]),
                 _panel([
                     _ph('Cost Trajectories 2015–2030', '$/MWh · actuals + projections'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='econ-lcoe-trend', config=cfg),
+                    _cap('Solar fell roughly 50% over the decade following its learning curve. Coal and gas trend upward as falling capacity factors push fixed costs over fewer MWh.'),
                 ]),
             ),
             _row(
@@ -386,11 +409,27 @@ def render_tab(tab):
                     _ph('Spot Price vs LCOE', '$/MWh · renewables crossover'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='econ-price-vs-lcoe', config=cfg),
+                    _cap('Wholesale spot price plotted against renewable LCOE bands. The 2022 spike was a gas supply crisis, not a renewable failure.'),
                 ], flex=2),
                 _panel([
                     _ph('Demand vs Average Cost', 'TWh (bars) · $/MWh (line)'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='econ-demand-cost', config=cfg),
+                    _cap('Demand is roughly flat while price oscillates. Volatility comes from the supply mix and fuel costs, not from consumption growth.'),
+                ]),
+            ),
+            _row(
+                _panel([
+                    _ph('Price Duration Curve', 'Monthly avg prices sorted high to low'),
+                    html.Div(style={'height': '12px'}),
+                    dcc.Graph(id='econ-price-duration', config=cfg),
+                    _cap('Monthly average prices sorted from highest to lowest. A steep left edge means a few extreme months drag the headline average upward.'),
+                ]),
+                _panel([
+                    _ph('Renewable Share vs Wholesale Price', 'One dot per state-year'),
+                    html.Div(style={'height': '12px'}),
+                    dcc.Graph(id='econ-share-vs-price', config=cfg),
+                    _cap('Each dot is one state in one year. A negative slope supports the claim that higher renewable penetration suppresses wholesale prices.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -402,11 +441,13 @@ def render_tab(tab):
                     _ph('Renewable Share by State', '% of total generation · by year'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='ren-share-bar', config=cfg),
+                    _cap('Renewable share trajectory by state. SA leads on wind, TAS on hydro. NSW and QLD lag because of their large coal fleets.'),
                 ], flex=2),
                 _panel([
                     _ph('Capacity Factor Heatmap', 'Month × Region · solar & wind'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='ren-cf-heatmap', config=cfg),
+                    _cap('How hard each region works its renewable fleet by month. Strong geographic complementarity is the justification for interconnector investment.'),
                 ]),
             ),
             _row(
@@ -414,6 +455,13 @@ def render_tab(tab):
                     _ph('Net GWh Change Since 2015', 'By source · waterfall'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='ren-growth-waterfall', config=cfg),
+                    _cap('Net generation change from first to last year by fuel. Solar and wind growth exceeds the coal decline: the grid is expanding while it decarbonizes.'),
+                ], flex=2),
+                _panel([
+                    _ph('Solar vs Wind Complementarity', 'Monthly GWh · diversification proof'),
+                    html.Div(style={'height': '12px'}),
+                    dcc.Graph(id='ren-solar-wind-corr', config=cfg),
+                    _cap('Each dot is one month for one region. Negative correlation across seasons supports combining solar and wind into a balanced renewable portfolio.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -425,11 +473,13 @@ def render_tab(tab):
                     _ph('Generation by State', 'GWh by source · selected year'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='sc-grouped-bar', config=cfg),
+                    _cap('Side by side state generation profile in the latest year. Each state has a different starting fuel mix, which dictates its transition path.'),
                 ], flex=2),
                 _panel([
                     _ph('State Radar', 'Renewable% · Price · Peak · Capacity Factor'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='sc-radar', config=cfg),
+                    _cap('Each state has a different shape across five axes. Different shapes mean different transition strategies are appropriate.'),
                 ]),
             ),
             _row(
@@ -437,6 +487,7 @@ def render_tab(tab):
                     _ph('Australia Map', 'Bubble = demand · colour = avg spot price'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='sc-price-map', config=cfg),
+                    _cap('Bubble size is total demand, color is average wholesale price. Visual confirmation that high-renewable states often trend toward lower prices.'),
                 ]),
             ),
         ], style={'padding': P})
