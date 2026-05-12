@@ -9,7 +9,7 @@ from core.design_tokens import (
     CARD_BORDER, CARD_SHADOW,
 )
 from core.chart_factory import _chart, _rgba, _bar_h
-from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label
+from core.layout_helpers import _panel, _ph, _row, _kpi, _legend_row, _pill_label, _cap
 from core.dash_utils import ACCESSIBLE_INDEX
 from products.ev_dashboard.data import (
     DF, ALL_MAKES, YEARS_WA, WA_COUNTIES,
@@ -280,11 +280,13 @@ def render_tab(tab):
                     _ph('Registrations by Model Year', 'Annual growth · BEV vs PHEV'),
                     html.Div(style={'height': '16px'}),
                     dcc.Graph(id='ov-year-bar', config={'displayModeBar': False}),
+                    _cap('Stacked bars: count of registered vehicles per model year, split by BEV and PHEV. Filters by year range, EV type, and make.'),
                 ], flex=2),
                 _panel([
                     _ph('BEV vs PHEV Split', 'Share of registered EVs'),
                     dcc.Graph(id='ov-type-pie', config={'displayModeBar': False}),
                     html.Div(id='ov-type-legend'),
+                    _cap('Pie: share of the filtered fleet across BEV, PHEV, and other powertrain categories.', show_reset=False),
                 ]),
             ),
             _row(
@@ -292,11 +294,13 @@ def render_tab(tab):
                     _ph('Top 15 Makes', 'By total registered vehicles'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='ov-make-bar', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: top 15 manufacturers ranked by total registrations within the current filter.'),
                 ]),
                 _panel([
                     _ph('Top 15 Models', 'Most popular EV models in WA'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='ov-model-bar', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: top 15 model names ranked by total registrations within the current filter.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -308,11 +312,13 @@ def render_tab(tab):
                     _ph('Market Share', 'Top 10 manufacturers + others'),
                     dcc.Graph(id='mf-pie', config={'displayModeBar': False}),
                     html.Div(id='mf-pie-legend'),
+                    _cap('Pie: share of the filtered fleet for the top 10 manufacturers, with remaining makes aggregated as "Others".', show_reset=False),
                 ], flex='1.1'),
                 _panel([
                     _ph('BEV vs PHEV by Make', 'Top 12 manufacturers'),
                     html.Div(style={'height': '16px'}),
                     dcc.Graph(id='mf-type-bar', config={'displayModeBar': False}),
+                    _cap('Stacked horizontal bars: for each of the top 12 makes, counts split by BEV and PHEV.'),
                 ], flex=2),
             ),
             _row(
@@ -320,11 +326,13 @@ def render_tab(tab):
                     _ph('Registration Trend by Make', 'Top 6 · annual count'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='mf-trend', config={'displayModeBar': False}),
+                    _cap('Lines: annual registration count per model year for the six largest makes in the current filter.'),
                 ], flex=2),
                 _panel([
                     _ph('Avg Electric Range by Make', 'Miles · BEVs only'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='mf-range', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: average rated electric range (miles) per manufacturer, restricted to BEVs with a known range value.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -336,11 +344,13 @@ def render_tab(tab):
                     _ph('Range Distribution', 'Miles · BEVs with known range'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='md-hist', config={'displayModeBar': False}),
+                    _cap('Histogram: distribution of rated electric range (miles) across BEVs in the current filter that have a known range value.'),
                 ], flex=2),
                 _panel([
                     _ph('Avg Range by Model Year', 'Fleet mean & median'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='md-range-year', config={'displayModeBar': False}),
+                    _cap('Two lines: mean and median rated electric range across vehicles in each model year, restricted to BEVs with a known range.'),
                 ]),
             ),
             _row(
@@ -348,11 +358,13 @@ def render_tab(tab):
                     _ph('Top 20 Models by Max Range', 'Rated miles'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='md-top-range', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: 20 models with the highest maximum rated range in the current filter; bar opacity scales linearly with rank.'),
                 ]),
                 _panel([
                     _ph('Volume vs Avg Range', 'Bubble size = registration count'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='md-scatter', config={'displayModeBar': False}),
+                    _cap('Scatter: x = registration count, y = average rated range. Each bubble is one model name; bubble size repeats the count for emphasis.'),
                 ]),
             ),
         ], style={'padding': P})
@@ -364,11 +376,13 @@ def render_tab(tab):
                     _ph('EV Registrations by County', 'Washington State · bubble proportional to fleet size'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='geo-map', config={'displayModeBar': False}),
+                    _cap('WA county map: one bubble per county placed at its centroid, sized by total EV registrations in the current filter.'),
                 ], flex=2),
                 _panel([
                     _ph('Top 15 Counties'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='geo-county', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: 15 counties with the most EV registrations under the current filter.'),
                 ]),
             ),
             _row(
@@ -376,11 +390,13 @@ def render_tab(tab):
                     _ph('Top 20 Cities'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='geo-city', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: 20 cities with the most EV registrations under the current filter.'),
                 ]),
                 _panel([
                     _ph('Electric Utility Distribution', 'Grid operator share of EV fleet'),
                     dcc.Graph(id='geo-utility', config={'displayModeBar': False}),
                     html.Div(id='geo-utility-legend'),
+                    _cap('Pie: share of the filtered fleet served by each electricity utility, with smaller utilities grouped into "Others".', show_reset=False),
                 ]),
             ),
         ], style={'padding': P})
@@ -392,11 +408,13 @@ def render_tab(tab):
                     _ph('Global EV Sales by Region  2015 – 2024', 'Million units · IEA Global EV Outlook'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gl-sales', config={'displayModeBar': False}),
+                    _cap('Stacked area: annual global EV sales (millions) split by region. Hardcoded IEA series, not affected by the dashboard filters.'),
                 ], flex=2),
                 _panel([
                     _ph('Battery Pack Cost Trend', '$/kWh · BloombergNEF'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gl-battery', config={'displayModeBar': False}),
+                    _cap('Dual axis line: battery pack price ($/kWh) and average BEV range (miles) over time. Hardcoded BNEF series, not affected by filters.'),
                 ]),
             ),
             _row(
@@ -404,11 +422,13 @@ def render_tab(tab):
                     _ph('Top Countries by Total Sales', 'Millions of units · selected period'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gl-countries', config={'displayModeBar': False}),
+                    _cap('Horizontal bars: total EV sales (millions) per country across the selected model year range.'),
                 ]),
                 _panel([
                     _ph('WA State Share of US EV Market', '% of annual US EV registrations'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='gl-wa-vs-global', config={'displayModeBar': False}),
+                    _cap('Line: Washington State registrations expressed as a percentage of total US EV sales per year within the selected range.'),
                 ]),
             ),
         ], style={'padding': P})

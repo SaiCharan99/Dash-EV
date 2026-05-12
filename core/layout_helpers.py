@@ -14,6 +14,8 @@ def _panel(children, flex=1, extra=None):
         'overflow': 'hidden',
         'flex': str(flex),
         'minWidth': '0',
+        'display': 'flex',
+        'flexDirection': 'column',
     }
     if extra:
         s.update(extra)
@@ -115,7 +117,9 @@ def _cap(description, show_reset=True):
         }) if show_reset else '',
     ], style={
         'display': 'flex', 'alignItems': 'flex-start', 'justifyContent': 'space-between',
-        'padding': '6px 20px 18px', 'gap': '12px',
+        'padding': '10px 20px 18px', 'gap': '12px',
+        'marginTop': 'auto',
+        'borderTop': f'1px solid {CARD_BORDER}',
     })
 
 
