@@ -189,12 +189,7 @@ app.layout = html.Div([
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
         html.Div([
-            html.Button('About', id='en-about-btn', style={
-                'background': 'none', 'border': f'1px solid {CARD_BORDER}',
-                'borderRadius': '8px', 'padding': '5px 12px',
-                'fontSize': '12px', 'color': MUTED, 'fontFamily': 'Inter, sans-serif',
-                'fontWeight': '500', 'letterSpacing': '0.1px', 'whiteSpace': 'nowrap',
-            }),
+            html.Button('About', id='en-about-btn', className='nav-btn', n_clicks=0),
             html.A('← Home', href='/', style={
                 'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
                 'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
@@ -323,13 +318,13 @@ def render_tab(tab):
                     _ph('Electricity Demand by Region', 'Monthly GWh · 2015–2024'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-timeseries', config=cfg),
-                    _cap('Monthly grid consumption stacked by NEM region. The post-2017 flattening partly reflects rooftop solar offsetting daytime grid demand rather than a real consumption fall.'),
+                    _cap('Stacked area: monthly electricity demand (GWh) for each selected region across the chosen year range.'),
                 ], flex=2),
                 _panel([
                     _ph('Seasonal Distribution', 'GWh by season · box plot'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-seasonal-box', config=cfg),
-                    _cap('Distribution of monthly demand within each season. Wide summer spread reflects heatwave volatility that drives grid capacity sizing.'),
+                    _cap('Box plot of monthly demand (GWh) grouped into the four Australian seasons. Boxes show the inter-quartile range; dots are outlier months.'),
                 ]),
             ),
             _row(
@@ -337,7 +332,7 @@ def render_tab(tab):
                     _ph('Demand Heatmap', 'Avg daily GW · month × year'),
                     html.Div(style={'height': '12px'}),
                     dcc.Graph(id='dem-heatmap', config=cfg),
-                    _cap('Daily-average load by month and year. Two climate zones visible: mainland summer (Dec–Feb cooling) peaks, Tasmanian winter (Jun–Aug heating) peaks.'),
+                    _cap('Heatmap of average daily grid load (GW) with year on the vertical axis and month on the horizontal axis. Aggregates across all selected regions.'),
                 ]),
             ),
         ], style={'padding': P})

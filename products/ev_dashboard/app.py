@@ -168,12 +168,7 @@ app.layout = html.Div([
         ], style={'flex': '1', 'display': 'flex', 'justifyContent': 'center'}),
 
         html.Div([
-            html.Button('About', id='ev-about-btn', style={
-                'background': 'none', 'border': f'1px solid {CARD_BORDER}',
-                'borderRadius': '8px', 'padding': '5px 12px',
-                'fontSize': '12px', 'color': MUTED, 'fontFamily': 'Inter, sans-serif',
-                'fontWeight': '500', 'letterSpacing': '0.1px', 'whiteSpace': 'nowrap',
-            }),
+            html.Button('About', id='ev-about-btn', className='nav-btn', n_clicks=0),
             html.A('← Home', href='/', style={
                 'fontSize': '12px', 'color': MUTED, 'textDecoration': 'none',
                 'whiteSpace': 'nowrap', 'letterSpacing': '0.1px',
